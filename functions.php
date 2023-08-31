@@ -60,17 +60,95 @@ function csv_to_posts_upload_page(){
             
             // Validate data for each row if needed.
             foreach ($csvRows as $row) {
+
+                // Set variables from CSV items 
+                $nazwaItem = str_replace(['"', "'"], '',$row[array_search('Nazwa', $header)]); // Remove both " and '
+                $longitudeItem = $row[array_search('longitude', $header)];
+                $latitudeItem = $row[array_search('latitude', $header)];
+                $addressItem = $row[array_search('Adres', $header)];
+                $openingHours = $row[array_search( 'Godziny otwarcia', $header)];
+                $URLItem = $row[array_search('Strona internetowa', $header)];
+                $reviewItems = array(
+                    "review_1" => $row[array_search( 'Opinia 1', $header)],
+                    "review_2" => $row[array_search( 'Opinia 2', $header)],
+                    "review_3" => $row[array_search( 'Opinia 3', $header)],
+                    "review_4" => $row[array_search( 'Opinia 4', $header)],
+                    "review_5" => $row[array_search( 'Opinia 5', $header)]
+                );
+                $typeItem = $row[array_search('Typ', $header)];
+                $pricesItem = $row[array_search('Wysokość cen', $header)];
+
+
+                // TODO Check if Google validates phone number on upload. There could be no reason to do it twice
+
                 
-                $longitudeIndex = array_search('longitude', $header);
-                $latitudeIndex = array_search('latitude', $header);
+                // ------------------------ VALIDATE CSV ITEMS
+
+
+                // Validate and process Address
+                $parts = explode(', ', $addressItem);
+
+                // Prepare the address array
+                $addressArray = [
+                    'precise' => trim($parts[0]),
+                    'city' => [],
+                    'country' => trim($parts[2])
+                ];
+
+                // Split city details
+                $cityParts = explode(' ', trim($parts[1]));
+                $addressArray['city']['post_code'] = trim($cityParts[0]);
+                $addressArray['city']['city_name'] = trim($cityParts[1]);
+
+
+                // Validate opening hours
+                $openingHoursParts = explode(',', $openingHours);
+                if(empty($openingHoursParts) || empty($openingHoursParts[0])){
+                    unset($openingHoursParts);
+                    $openingHours = "Nie podano";
+                }else{
+                    $openingHours = $openingHoursParts;
+                    unset($openingHoursParts);
+                }
+
+
+                // Validate page URL
+                if(!filter_var($URLItem, FILTER_VALIDATE_URL)) return;
                 
-                if(!is_numeric($row[$longitudeIndex]) || !is_numeric($row[$latitudeIndex])) {
+
+                // Validate Type of business
+                $typeItemParts = explode(',', $typeItem);
+                switch($typeItemParts[0]){
+                    case 'jewelry_store':
+                        $businessCategory = 'Salon jubilerski';
+                        break;
+                    default:
+                        $businessCategory = 'Inne';
+                }
+                
+
+                // Validate prices
+                $pricesItem = (!empty($pricesItem)) ? $pricesItem : "Nie podano";
+
+
+                // Validate Longitude and Latitude
+                if(!is_numeric($longitudeItem) || !is_numeric($latitudeItem)) {
                     echo "Invalid longitude or latitude in one of the rows.";
                     return;
                 }
-                
-                // TODO Add other validations as required
-                // TODO The logic to create posts goes here...
+
+
+                // ------------------------ GENERATE SINGLE-POST
+                    // ------------ STEPS TO DO
+                        /**
+                         * 
+                         * Handle Post Creation
+                         * Implement Selenium and Screenshot Logic
+                         * Implement the Google Maps API
+                         * 
+                         */
+
+
             }
             
             echo 'Posts imported successfully!';
