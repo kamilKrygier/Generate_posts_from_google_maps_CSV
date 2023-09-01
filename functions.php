@@ -19,7 +19,12 @@
 
 // DEBUG MODE FUNCTION
 function debug_log($message) {
-    if (WP_DEBUG) echo $message . "<br>";
+    if (WP_DEBUG) {
+        $logFile = plugin_dir_path( __FILE__ ) . 'logfile.log';
+        $current = file_get_contents($logFile);
+        $current .= $message . "\n";  // Append received message to file content
+        file_put_contents($logFile, $current);        
+    }
 }
 
 
@@ -149,10 +154,13 @@ function csv_to_posts_upload_page(){
                     $pricesItem = (!empty($pricesItem)) ? $pricesItem : "Nie podano";
 
 
-                    // Validate Longitude and Latitude
+                    // Validate Longitude and Latitude and build map URL
                     if(!is_numeric($longitudeItem) || !is_numeric($latitudeItem)) {
                         echo "Invalid longitude or latitude in one of the rows.";
                         return;
+                    }else{
+                        $url = "https://maps.googleapis.com/maps/api/staticmap?center=$longitudeItem,$latitudeItem&zoom=18&size=1200x600&scale=2&markers=size:mid|color:red|$longitudeItem,$latitudeItem&key=" . MAPS_STATIC_API_KEY;
+                        $signedUrl = signUrl($url, MAPS_STATIC_API_SECRET);
                     }
 
 
@@ -160,8 +168,7 @@ function csv_to_posts_upload_page(){
                         /** ------------ // TODO
                          * 
                          * Handle Post Creation
-                         * Implement Selenium and Screenshot Logic
-                         * Implement the Google Maps API
+                         * Implement Screenshot Logic
                          * 
                          */
 
@@ -202,8 +209,28 @@ function csv_to_posts_upload_page(){
     echo '<input type="submit" value="Upload" />';
     echo '</form>';
 
-    // TODO Add option for getting CSVs from Google Places API
-    // Check Plugin on GitHub and combine all 
+    // TODO Check Plugin (Google maps scrapper) on GitHub and combine all 
 
     // TODO Add loading icon while batch in progress
+}
+
+function signUrl($url, $secret){
+
+    // parse the URL
+    $parsedUrl = parse_url($url);
+    // construct the URL to be signed
+    $urlToSign = $parsedUrl['path'] . "?" . $parsedUrl['query'];
+    
+    // decode the private key into its binary format
+    $decodedKey = str_replace(['-', '_'], ['+', '/'], $secret);
+    $decodedKey = base64_decode($decodedKey);
+    
+    // create a signature using the private key and the URL-encoded string using HMAC SHA1
+    $signature = hash_hmac('sha1', $urlToSign, $decodedKey, true);
+    
+    // encode the signature into base64 for use within a URL
+    $encodedSignature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
+    
+    return $url . "&signature=" . $encodedSignature;
+
 }
