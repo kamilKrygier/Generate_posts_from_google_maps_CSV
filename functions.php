@@ -58,7 +58,7 @@ function csv_to_posts_upload_page(){
             $validMimeTypes = ['text/plain', 'text/csv', 'application/csv', 'application/vnd.ms-excel', 'text/comma-separated-values', 'text/x-comma-separated-values'];
 
             if (!in_array($fileType, $validMimeTypes)) {
-                echo 'Please upload a valid CSV file.';
+                debug_log('Please upload a valid CSV file.');
                 return;
             }
 
@@ -79,7 +79,7 @@ function csv_to_posts_upload_page(){
             
             foreach($requiredColumns as $column) {
                 if(!in_array($column, $header)) {
-                    echo "Missing required column: $column";
+                    debug_log("Missing required column: $column");
                     return;
                 }
             }
@@ -156,7 +156,7 @@ function csv_to_posts_upload_page(){
 
                     // Validate Longitude and Latitude and build map URL
                     if(!is_numeric($longitudeItem) || !is_numeric($latitudeItem)) {
-                        echo "Invalid longitude or latitude in one of the rows.";
+                        debug_log('Invalid longitude or latitude in one of the rows.');
                         return;
                     }else{
                         $url = "https://maps.googleapis.com/maps/api/staticmap?center=$longitudeItem,$latitudeItem&zoom=18&size=1200x600&scale=2&markers=size:mid|color:red|$longitudeItem,$latitudeItem&key=" . MAPS_STATIC_API_KEY;
@@ -167,31 +167,69 @@ function csv_to_posts_upload_page(){
                     // ------------------------ GENERATE SINGLE-POST
                         /** ------------ // TODO
                          * 
-                         * Handle Post Creation
+                         * Handle Post Creation + AI 
                          * Implement Screenshot Logic
                          * 
                          */
 
 
                         // TEMPORARY BATCH TEST
-                        echo 'Name: ' . $nazwaItem . '<br><br>';
-                        echo 'Longitude: ' . $longitudeItem . '<br><br>';
-                        echo 'Latitude: ' . $latitudeItem . '<br><br>';
-                        echo 'Address: ';
-                        var_dump($addressArray);
-                        echo '<br><br>';
-                        if(!is_array($openingHours)) echo 'Opening hours: ' . $openingHours . '<br><br>';
-                        else {
-                            echo 'Opening hours: ';
-                            var_dump($openingHours);
-                            echo '<br><br>';
-                        }
-                        echo 'URL: ' . $URLItem . '<br><br>';
-                        echo 'Reviews: ';
-                        var_dump($reviewItems);
-                        echo '<br><br>';           
-                        echo 'Business Category: ' . $businessCategory . '<br><br>';
-                        echo 'Prices: ' . $pricesItem . '<br><br>';
+                            // echo 'Name: ' . $nazwaItem . '<br><br>';
+                            // echo 'Longitude: ' . $longitudeItem . '<br><br>';
+                            // echo 'Latitude: ' . $latitudeItem . '<br><br>';
+                            // echo 'Address: ';
+                            // var_dump($addressArray);
+                            // echo '<br><br>';
+                            // if(!is_array($openingHours)) echo 'Opening hours: ' . $openingHours . '<br><br>';
+                            // else {
+                            //     echo 'Opening hours: ';
+                            //     var_dump($openingHours);
+                            //     echo '<br><br>';
+                            // }
+                            // echo 'URL: ' . $URLItem . '<br><br>';
+                            // echo 'Reviews: ';
+                            // var_dump($reviewItems);
+                            // echo '<br><br>';           
+                            // echo 'Business Category: ' . $businessCategory . '<br><br>';
+                            // echo 'Prices: ' . $pricesItem . '<br><br>';
+
+                            // INSERT POST
+
+                            // Check if the category exists
+                            $category_exists = term_exists($businessCategory, 'category'); 
+                            
+                            // If it doesn't exist, create it
+                            if (!$category_exists) {
+                                wp_insert_term(
+                                    $businessCategory, // the term 
+                                    'category', // the taxonomy
+                                    array(
+                                        'slug' => sanitize_title($businessCategory)
+                                    )
+                                );
+                            }
+
+                            $catID = get_cat_ID ( $businessCategory );
+
+                            $post_data = array(
+                                'post_title'        => $nazwaItem . ' ' . $addressArray['city']['city_name'],
+                                'post_content'      => '[ADD HERE VARIABLE WITH GENERATED CONTENT]',
+                                'post_status'       => 'publish',
+                                'post_type'         => 'post',
+                                'post_author'       => get_current_user_id(),
+                                'post_category'     => array($catID),
+                                'comment_status'    => 'closed',
+                            );
+                            
+                            // Insert the post and get the post ID
+                            $post_id = wp_insert_post( $post_data );
+                            
+                            if( $post_id ) debug_log("Post was created with the ID= $post_id");
+                                else debug_log("Failed to create post.");
+
+                            $attachment_id = 6;  // TODO Replace with placeholder ID or page screenshot
+                            set_post_thumbnail( $post_id, $attachment_id );
+                            
 
                 }
             }
@@ -209,7 +247,7 @@ function csv_to_posts_upload_page(){
     echo '<input type="submit" value="Upload" />';
     echo '</form>';
 
-    // TODO Check Plugin (Google maps scrapper) on GitHub and combine all 
+    // TODO Check Plugin (Google maps scrapper) on GitHub and combine all (remember to enable Places API)
 
     // TODO Add loading icon while batch in progress
 }
