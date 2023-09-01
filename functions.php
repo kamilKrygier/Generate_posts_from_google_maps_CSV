@@ -46,7 +46,8 @@ function csv_to_posts_upload_page(){
 
 
     // VARIABLES
-    $batch_size = 100;
+    $batch_size = 10;
+    $placeholder_id = 6;  // TODO Replace with placeholder ID or page screenshot
 
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -93,6 +94,7 @@ function csv_to_posts_upload_page(){
 
                     // Set variables from CSV items 
                     $nazwaItem = str_replace(['"', "'"], '',$row[array_search('Nazwa', $header)]); // Remove both " and '
+                    $phone = $row[array_search('Telefon', $header)]; // TODO Check if Google validates phone number on upload. There could be no reason to do it twice
                     $longitudeItem = $row[array_search('longitude', $header)];
                     $latitudeItem = $row[array_search('latitude', $header)];
                     $addressItem = $row[array_search('Adres', $header)];
@@ -103,37 +105,43 @@ function csv_to_posts_upload_page(){
                         "review_2" => $row[array_search( 'Opinia 2', $header)],
                         "review_3" => $row[array_search( 'Opinia 3', $header)],
                         "review_4" => $row[array_search( 'Opinia 4', $header)],
-                        "review_5" => $row[array_search( 'Opinia 5', $header)]
+                        "review_5" => $row[array_search( 'Opinia 5', $header)],
+                        "review_6" => $row[array_search( 'Opinia 6', $header)]
                     );
                     $typeItem = $row[array_search('Typ', $header)];
                     $pricesItem = $row[array_search('Wysokość cen', $header)];
-
-
-                    // TODO Check if Google validates phone number on upload. There could be no reason to do it twice
 
                     
                     // ------------------------ VALIDATE CSV ITEMS
 
 
                     // Validate and process Address
-                    $parts = explode(', ', $addressItem);
+                    $addressParts = explode(', ', $addressItem);
 
                     // Prepare the address array
                     $addressArray = [
-                        'street' => trim($parts[0]),
+                        'street' => trim($addressParts[0]),
                         'city' => [],
-                        'country' => trim($parts[2])
+                        'country' => trim($addressParts[2])
                     ];
 
                     // Split city details
-                    $cityParts = explode(' ', trim($parts[1]));
+                    $cityParts = explode(' ', trim($addressParts[1]));
                     $addressArray['city']['post_code'] = trim($cityParts[0]);
                     $addressArray['city']['city_name'] = trim($cityParts[1]);
 
 
                     // Validate opening hours
                     $openingHoursParts = explode(',', $openingHours);
-                    $openingHours = (empty($openingHoursParts) || empty($openingHoursParts[0])) ? "Nie podano" : $openingHoursParts;
+                    if(empty($openingHoursParts) || empty($openingHoursParts[0])) $pretty_opening_hours = "Nie podano";
+                        else{
+                            // $pretty_opening_hours = $openingHoursParts;
+                            $pretty_opening_hours = "<ul>";
+                                foreach($openingHoursParts as $openingHoursElement){
+                                    $pretty_opening_hours .= "<li><span>$openingHoursElement</span></li>";
+                                }
+                            $pretty_opening_hours .= "</ul>";
+                        }
 
                     // Validate page URL
                     if(!filter_var($URLItem, FILTER_VALIDATE_URL)) return;
@@ -165,7 +173,7 @@ function csv_to_posts_upload_page(){
 
 
                     // ------------------------ GENERATE SINGLE-POST
-                        /** ------------ // TODO
+                        /** ------------ // TODO MILESTONES
                          * 
                          * Handle Post Creation + AI 
                          * Implement Screenshot Logic
@@ -193,48 +201,53 @@ function csv_to_posts_upload_page(){
                             // echo 'Business Category: ' . $businessCategory . '<br><br>';
                             // echo 'Prices: ' . $pricesItem . '<br><br>';
 
-                            // INSERT POST
+                    // Create pretty place name
+                    $pretty_place_name = $nazwaItem . ' ' . $addressArray['city']['city_name'] . ', '. $addressArray['street'];
 
-                            // Check if the category exists
-                            $category_exists = term_exists($businessCategory, 'category'); 
-                            
-                            // If it doesn't exist, create it
-                            if (!$category_exists) {
-                                wp_insert_term(
-                                    $businessCategory, // the term 
-                                    'category', // the taxonomy
-                                    array(
-                                        'slug' => sanitize_title($businessCategory)
-                                    )
-                                );
-                            }
+                    // INCLUDE POST CONTENT
+                    include('post-content.php');
 
-                            $catID = get_cat_ID ( $businessCategory );
+                    // INSERT POST
+                    // Check if the category exists
+                    $category_exists = term_exists($businessCategory, 'category'); 
+                    
+                    // If it doesn't exist, create it
+                    if (!$category_exists) {
+                        wp_insert_term(
+                            $businessCategory, // the term 
+                            'category', // the taxonomy
+                            array(
+                                'slug' => sanitize_title($businessCategory)
+                            )
+                        );
+                    }
 
-                            $post_data = array(
-                                'post_title'        => $nazwaItem . ' ' . $addressArray['city']['city_name'],
-                                'post_content'      => '[ADD HERE VARIABLE WITH GENERATED CONTENT]',
-                                'post_status'       => 'publish',
-                                'post_type'         => 'post',
-                                'post_author'       => get_current_user_id(),
-                                'post_category'     => array($catID),
-                                'comment_status'    => 'closed',
-                            );
-                            
-                            // Insert the post and get the post ID
-                            $post_id = wp_insert_post( $post_data );
-                            
-                            if( $post_id ) debug_log("Post was created with the ID= $post_id");
-                                else debug_log("Failed to create post.");
+                    $catID = get_cat_ID ( $businessCategory );
 
-                            $attachment_id = 6;  // TODO Replace with placeholder ID or page screenshot
-                            set_post_thumbnail( $post_id, $attachment_id );
-                            
+                    $post_data = array(
+                        'post_title'        => $pretty_place_name,
+                        'post_content'      => $post_content,
+                        'post_status'       => 'publish',
+                        'post_type'         => 'post',
+                        'post_author'       => get_current_user_id(),
+                        'post_category'     => array($catID),
+                        'comment_status'    => 'closed',
+                    );
+                    
+                    // Insert the post and get the post ID
+                    // TODO uncomment below line at the end
+                    // $post_id = wp_insert_post( $post_data );
+                    
+                    if( $post_id ){
 
+                        debug_log("Post was created with the ID= $post_id");
+                        set_post_thumbnail( $post_id, $placeholder_id );
+
+                    } else debug_log("Failed to create post.");
                 }
+                debug_log("Processed batch " . ($i + 1));
             }
-            
-            debug_log('Posts imported successfully!');
+            debug_log('All batches has been finished!');
             return;
         }
     }
