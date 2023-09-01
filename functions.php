@@ -14,8 +14,16 @@
     exit; // Exit if accessed directly
 }
 
+// TODO Remember to add restrictions to Google Maps API at console.cloud.google.com
 
 
+// DEBUG MODE FUNCTION
+function debug_log($message) {
+    if (WP_DEBUG) echo $message . "<br>";
+}
+
+
+// CREATE PAGE IN WORDPRESS ADMIN
 function csv_to_posts_menu(){
     add_menu_page(
         'CSV to Posts',
@@ -27,7 +35,15 @@ function csv_to_posts_menu(){
 }
 add_action('admin_menu', 'csv_to_posts_menu');
 
+
+// LET THE MAGIC HAPPEN
 function csv_to_posts_upload_page(){
+
+
+    // VARIABLES
+    $batch_size = 100;
+
+
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] === UPLOAD_ERR_OK) {
@@ -45,6 +61,11 @@ function csv_to_posts_upload_page(){
             $csvRows = array_map('str_getcsv', file($_FILES['csv_file']['tmp_name']));
             $header = array_shift($csvRows);
 
+            $totalRows = count($csvRows);
+            $batches = ceil($totalRows / $batch_size);
+            debug_log("Total Rows: $totalRows");
+            debug_log("Processing in $batches batches of $batch_size");
+
             $requiredColumns = [
                 'Nazwa', 'Telefon', 'Adres', 'Godziny otwarcia', 'Strona internetowa',
                 'Opinia 1', 'Opinia 2', 'Opinia 3', 'Opinia 4', 'Opinia 5', 'Typ',
@@ -57,90 +78,86 @@ function csv_to_posts_upload_page(){
                     return;
                 }
             }
-            
-            // Validate data for each row if needed.
-            foreach ($csvRows as $row) {
 
-                // Set variables from CSV items 
-                $nazwaItem = str_replace(['"', "'"], '',$row[array_search('Nazwa', $header)]); // Remove both " and '
-                $longitudeItem = $row[array_search('longitude', $header)];
-                $latitudeItem = $row[array_search('latitude', $header)];
-                $addressItem = $row[array_search('Adres', $header)];
-                $openingHours = $row[array_search( 'Godziny otwarcia', $header)];
-                $URLItem = $row[array_search('Strona internetowa', $header)];
-                $reviewItems = array(
-                    "review_1" => $row[array_search( 'Opinia 1', $header)],
-                    "review_2" => $row[array_search( 'Opinia 2', $header)],
-                    "review_3" => $row[array_search( 'Opinia 3', $header)],
-                    "review_4" => $row[array_search( 'Opinia 4', $header)],
-                    "review_5" => $row[array_search( 'Opinia 5', $header)]
-                );
-                $typeItem = $row[array_search('Typ', $header)];
-                $pricesItem = $row[array_search('Wysokość cen', $header)];
+            for ($i = 0; $i < $batches; $i++) {
 
+                $batchRows = array_splice($csvRows, 0, $batch_size);
+                debug_log("Processing batch " . ($i + 1));   
 
-                // TODO Check if Google validates phone number on upload. There could be no reason to do it twice
+                foreach ($batchRows as $row) {
 
-                
-                // ------------------------ VALIDATE CSV ITEMS
+                    // Set variables from CSV items 
+                    $nazwaItem = str_replace(['"', "'"], '',$row[array_search('Nazwa', $header)]); // Remove both " and '
+                    $longitudeItem = $row[array_search('longitude', $header)];
+                    $latitudeItem = $row[array_search('latitude', $header)];
+                    $addressItem = $row[array_search('Adres', $header)];
+                    $openingHours = $row[array_search( 'Godziny otwarcia', $header)];
+                    $URLItem = $row[array_search('Strona internetowa', $header)];
+                    $reviewItems = array(
+                        "review_1" => $row[array_search( 'Opinia 1', $header)],
+                        "review_2" => $row[array_search( 'Opinia 2', $header)],
+                        "review_3" => $row[array_search( 'Opinia 3', $header)],
+                        "review_4" => $row[array_search( 'Opinia 4', $header)],
+                        "review_5" => $row[array_search( 'Opinia 5', $header)]
+                    );
+                    $typeItem = $row[array_search('Typ', $header)];
+                    $pricesItem = $row[array_search('Wysokość cen', $header)];
 
 
-                // Validate and process Address
-                $parts = explode(', ', $addressItem);
+                    // TODO Check if Google validates phone number on upload. There could be no reason to do it twice
 
-                // Prepare the address array
-                $addressArray = [
-                    'precise' => trim($parts[0]),
-                    'city' => [],
-                    'country' => trim($parts[2])
-                ];
-
-                // Split city details
-                $cityParts = explode(' ', trim($parts[1]));
-                $addressArray['city']['post_code'] = trim($cityParts[0]);
-                $addressArray['city']['city_name'] = trim($cityParts[1]);
+                    
+                    // ------------------------ VALIDATE CSV ITEMS
 
 
-                // Validate opening hours
-                $openingHoursParts = explode(',', $openingHours);
-                if(empty($openingHoursParts) || empty($openingHoursParts[0])){
-                    unset($openingHoursParts);
-                    $openingHours = "Nie podano";
-                }else{
-                    $openingHours = $openingHoursParts;
-                    unset($openingHoursParts);
-                }
+                    // Validate and process Address
+                    $parts = explode(', ', $addressItem);
+
+                    // Prepare the address array
+                    $addressArray = [
+                        'street' => trim($parts[0]),
+                        'city' => [],
+                        'country' => trim($parts[2])
+                    ];
+
+                    // Split city details
+                    $cityParts = explode(' ', trim($parts[1]));
+                    $addressArray['city']['post_code'] = trim($cityParts[0]);
+                    $addressArray['city']['city_name'] = trim($cityParts[1]);
 
 
-                // Validate page URL
-                if(!filter_var($URLItem, FILTER_VALIDATE_URL)) return;
-                
+                    // Validate opening hours
+                    $openingHoursParts = explode(',', $openingHours);
+                    $openingHours = (empty($openingHoursParts) || empty($openingHoursParts[0])) ? "Nie podano" : $openingHoursParts;
 
-                // Validate Type of business
-                $typeItemParts = explode(',', $typeItem);
-                switch($typeItemParts[0]){
-                    case 'jewelry_store':
-                        $businessCategory = 'Salon jubilerski';
-                        break;
-                    default:
-                        $businessCategory = 'Inne';
-                }
-                
+                    // Validate page URL
+                    if(!filter_var($URLItem, FILTER_VALIDATE_URL)) return;
+                    
 
-                // Validate prices
-                $pricesItem = (!empty($pricesItem)) ? $pricesItem : "Nie podano";
+                    // Validate Type of business
+                    $typeItemParts = explode(',', $typeItem);
+                    switch($typeItemParts[0]){
+                        case 'jewelry_store':
+                            $businessCategory = 'Salon jubilerski';
+                            break;
+                        default:
+                            $businessCategory = 'Inne';
+                    }
+                    
 
-
-                // Validate Longitude and Latitude
-                if(!is_numeric($longitudeItem) || !is_numeric($latitudeItem)) {
-                    echo "Invalid longitude or latitude in one of the rows.";
-                    return;
-                }
+                    // Validate prices
+                    $pricesItem = (!empty($pricesItem)) ? $pricesItem : "Nie podano";
 
 
-                // ------------------------ GENERATE SINGLE-POST
-                    // ------------ STEPS TO DO
-                        /**
+                    // Validate Longitude and Latitude
+                    if(!is_numeric($longitudeItem) || !is_numeric($latitudeItem)) {
+                        echo "Invalid longitude or latitude in one of the rows.";
+                        return;
+                    }
+
+
+                    // ------------------------ GENERATE SINGLE-POST
+                        /** ------------ // TODO
                          * 
                          * Handle Post Creation
                          * Implement Selenium and Screenshot Logic
@@ -149,16 +166,44 @@ function csv_to_posts_upload_page(){
                          */
 
 
+                        // TEMPORARY BATCH TEST
+                        echo 'Name: ' . $nazwaItem . '<br><br>';
+                        echo 'Longitude: ' . $longitudeItem . '<br><br>';
+                        echo 'Latitude: ' . $latitudeItem . '<br><br>';
+                        echo 'Address: ';
+                        var_dump($addressArray);
+                        echo '<br><br>';
+                        if(!is_array($openingHours)) echo 'Opening hours: ' . $openingHours . '<br><br>';
+                        else {
+                            echo 'Opening hours: ';
+                            var_dump($openingHours);
+                            echo '<br><br>';
+                        }
+                        echo 'URL: ' . $URLItem . '<br><br>';
+                        echo 'Reviews: ';
+                        var_dump($reviewItems);
+                        echo '<br><br>';           
+                        echo 'Business Category: ' . $businessCategory . '<br><br>';
+                        echo 'Prices: ' . $pricesItem . '<br><br>';
+
+                }
             }
             
-            echo 'Posts imported successfully!';
+            debug_log('Posts imported successfully!');
             return;
         }
     }
 
+
+    // SHOW UPLOAD BUTTON
     echo '<h1>CSV to Posts</h1>';
     echo '<form method="post" enctype="multipart/form-data">';
     echo '<input type="file" name="csv_file" /><br>';
     echo '<input type="submit" value="Upload" />';
     echo '</form>';
+
+    // TODO Add option for getting CSVs from Google Places API
+    // Check Plugin on GitHub and combine all 
+
+    // TODO Add loading icon while batch in progress
 }
