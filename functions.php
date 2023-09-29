@@ -7,20 +7,35 @@
  * Author URI: https://www.linkedin.com/in/kamil-krygier-132940166
  * Text Domain: sixsilver-csv-to-posts
  * Requires at least: 6.2
- * Requires PHP: 7.4
+ * Requires PHP: 8.1
  */
 
  if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly
 }
 
+require 'vendor/autoload.php';
+use GuzzleHttp\Client;
+use Spatie\Browsershot\Browsershot;
+
+
+
+
 // TODO Remember to add restrictions to Google Maps API at console.cloud.google.com
+
 
 
 // DEBUG MODE FUNCTION
 function debug_log($message) {
     if (WP_DEBUG) {
-        $logFile = plugin_dir_path( __FILE__ ) . 'logfile.log';
+        $logFile = plugin_dir_path( __FILE__ ) . 'debug.log';
+        
+        // Check if file exists, if not create it with appropriate permissions
+        if (!file_exists($logFile)) {
+            touch($logFile);  // The touch() function sets access and modification time of file. If the file does not exist, it will be created.
+            chmod($logFile, 0664);  // Set appropriate permissions
+        }
+        
         $current = file_get_contents($logFile);
         $current .= $message . "\n";  // Append received message to file content
         file_put_contents($logFile, $current);        
@@ -181,69 +196,85 @@ function csv_to_posts_upload_page(){
                          */
 
 
-                        // TEMPORARY BATCH TEST
-                            // echo 'Name: ' . $nazwaItem . '<br><br>';
-                            // echo 'Longitude: ' . $longitudeItem . '<br><br>';
-                            // echo 'Latitude: ' . $latitudeItem . '<br><br>';
-                            // echo 'Address: ';
-                            // var_dump($addressArray);
-                            // echo '<br><br>';
-                            // if(!is_array($openingHours)) echo 'Opening hours: ' . $openingHours . '<br><br>';
-                            // else {
-                            //     echo 'Opening hours: ';
-                            //     var_dump($openingHours);
-                            //     echo '<br><br>';
-                            // }
-                            // echo 'URL: ' . $URLItem . '<br><br>';
-                            // echo 'Reviews: ';
-                            // var_dump($reviewItems);
-                            // echo '<br><br>';           
-                            // echo 'Business Category: ' . $businessCategory . '<br><br>';
-                            // echo 'Prices: ' . $pricesItem . '<br><br>';
-
                     // Create pretty place name
                     $pretty_place_name = $nazwaItem . ' ' . $addressArray['city']['city_name'] . ', '. $addressArray['street'];
 
-                    // INCLUDE POST CONTENT
-                    include('post-content.php');
 
-                    // INSERT POST
-                    // Check if the category exists
-                    $category_exists = term_exists($businessCategory, 'category'); 
+                    // MAKE OPENAI API CALL
+                    // $post_content = generateArticle($nazwaItem, $longitudeItem, $latitudeItem, $addressArray, $openingHours, $reviewItems, $businessCategory, $pricesItem);
+                    $prompt = " Przygotuj mi artykuł wordpress (składnia edytora Gutenberg) w języku polskim, pod pozycjonowanie w Google. Musi zawierać przynajmniej 800 słów oraz być podzielony na nagłówki (h2 oraz h3, ponieważ tytuł nie będzie generowany przez AI), paragrafy oraz sekcję FAQ. Bazuj na podanych zmiennych:
+                                Nazwa firmy: $nazwaItem,
+                                Długość geogreficzna: $longitudeItem,
+                                Szerokość geograficzna: $latitudeItem,
+                                Adres: " . $addressArray['street'] . ', ' . $addressArray['city']['post_code'] . ' ' . $addressArray['city']['city_name'] . ', ' . $addressArray['country'] . ",
+                                Godziny otwarcia: " . $openingHours . " (ale nie wyświetlaj dodatkowo ich na stronie),
+                                Adres strony internetowej: $URLItem,
+                                Opinie klientów: " . implode(", ", $reviewItems) . ",
+                                Kategoria biznesu: $businessCategory,
+                                Przedział cenowy produktow: $pricesItem";
                     
-                    // If it doesn't exist, create it
-                    if (!$category_exists) {
-                        wp_insert_term(
-                            $businessCategory, // the term 
-                            'category', // the taxonomy
-                            array(
-                                'slug' => sanitize_title($businessCategory)
-                            )
+
+                    // Generate post content with OpenAI
+                    $generated_post_content = generateContentWithOpenAI($prompt);
+
+
+                    if($generated_post_content){
+
+                        // Declare new variable for post content or clear existing one
+                        $post_content = "";
+
+                        // GET PAGE SCREENSHOT
+                        $page_screenshot = upload_page_screenshot($URLItem, $pretty_place_name);
+
+
+                        // INCLUDE POST CONTENT
+                        include('post-content.php');
+
+
+                        // INSERT POST
+                        // Check if the category exists
+                        $category_exists = term_exists($businessCategory, 'category'); 
+                        
+                        // If it doesn't exist, create it
+                        if (!$category_exists) {
+                            wp_insert_term(
+                                $businessCategory, // the term 
+                                'category', // the taxonomy
+                                array(
+                                    'slug' => sanitize_title($businessCategory)
+                                )
+                            );
+                        }
+
+                        $catID = get_cat_ID ( $businessCategory );
+
+                        $post_data = array(
+                            'post_title'        => $pretty_place_name,
+                            'post_content'      => $post_content,
+                            'post_status'       => 'publish',
+                            'post_type'         => 'post',
+                            'post_author'       => get_current_user_id(),
+                            'post_category'     => array($catID),
+                            'comment_status'    => 'closed',
                         );
-                    }
+                        
+                        // Insert the post and get the post ID
+                        $post_id = wp_insert_post( $post_data );
+                        echo "<script>jQuery('.kk_spinner_wrapper').fadeOut();</script>";
+                        if( $post_id ){
 
-                    $catID = get_cat_ID ( $businessCategory );
+                            debug_log("Post was created with the ID= $post_id");
+                            
+                            if($snap) set_post_thumbnail( $post_id, $snap[0] );
+                            else set_post_thumbnail( $post_id, $placeholder_id );
 
-                    $post_data = array(
-                        'post_title'        => $pretty_place_name,
-                        'post_content'      => $post_content,
-                        'post_status'       => 'publish',
-                        'post_type'         => 'post',
-                        'post_author'       => get_current_user_id(),
-                        'post_category'     => array($catID),
-                        'comment_status'    => 'closed',
-                    );
-                    
-                    // Insert the post and get the post ID
-                    // TODO uncomment below line at the end
-                    // $post_id = wp_insert_post( $post_data );
-                    
-                    if( $post_id ){
+                            echo "Post was created with the ID= $post_id, with attachment with ID= $placeholder_id";
 
-                        debug_log("Post was created with the ID= $post_id");
-                        set_post_thumbnail( $post_id, $placeholder_id );
-
-                    } else debug_log("Failed to create post.");
+                        } else{
+                            debug_log("Failed to create post with ID= $post_id");
+                            echo "Failed to create post with ID= $post_id";
+                        }
+                    } else debug_log("OpenAI doesn't returned post content.");
                 }
                 debug_log("Processed batch " . ($i + 1));
             }
@@ -259,10 +290,10 @@ function csv_to_posts_upload_page(){
     echo '<input type="file" name="csv_file" /><br>';
     echo '<input type="submit" value="Upload" />';
     echo '</form>';
+    echo '<div class="kk_spinner_wrapper"><div class="kk_spinner"></div></div>';
+    echo '<style>.kk_spinner_wrapper{display: none; position: fixed;width: 100vw;height: 100vh;z-index:99999;justify-content: center;align-items: center;gap:2em;left: 0;top: 0;right: 0;bottom: 0;background-color: rgba(255,255,255,.8);}.kk_spinner{display: grid;place-items: center;width: 150px;height: 150px;border-radius: 50%;background: conic-gradient(from 180deg at 50% 50%,rgba(82, 0, 255, 0) 0deg,#5200ff 360deg);animation: spin 2s infinite linear;}.kk_spinner::before {content: "";border-radius: 50%;width: 80%;height: 80%;background-color: #FFF;}@keyframes spin {to {transform: rotate(1turn);}}</style>';
 
     // TODO Check Plugin (Google maps scrapper) on GitHub and combine all (remember to enable Places API)
-
-    // TODO Add loading icon while batch in progress
 }
 
 function signUrl($url, $secret){
@@ -284,4 +315,79 @@ function signUrl($url, $secret){
     
     return $url . "&signature=" . $encodedSignature;
 
+}
+
+function generateContentWithOpenAI($prompt) {
+    echo "<script>jQuery('.kk_spinner_wrapper').fadeIn().css('display', 'flex');</script>";
+
+    $client = new Client(['base_uri' => 'https://api.openai.com/']);
+
+    try {
+        $response = $client->post('v1/chat/completions', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . OPENAI_API_KEY,
+                'Content-Type' => 'application/json',
+            ],
+            'json' => [
+                'model' => 'gpt-3.5-turbo',
+                'messages' => [
+                    [
+                        'role' => 'system',
+                        'content' => 'You are a helpful assistant.'
+                    ],
+                    [
+                        'role' => 'user',
+                        'content' => $prompt
+                    ]
+                ],
+                'max_tokens' => 1024
+            ]
+        ]);
+
+        $body = $response->getBody();
+        $content = json_decode($body, true);
+
+        return $content['choices'][0]['message']['content'] ?? null;
+    } catch (GuzzleHttp\Exception\ClientException $e) {
+        debug_log($e->getMessage());
+        return null;
+    }
+}
+
+function upload_page_screenshot($URLItem, $pretty_place_name){
+
+    // Declare image name and temporary path to file
+    $imageName = sanitize_text_field($pretty_place_name);
+    $upload_dir = wp_upload_dir();
+    $temp_filename = $upload_dir['basedir'] . '/'.$pretty_place_name.'.jpg';
+
+    // Get temporary screenshot
+    if(!empty($URLItem) && filter_var($URLItem, FILTER_VALIDATE_URL))
+        Browsershot::url($URLItem)
+            ->setScreenshotType('jpeg', 86)
+            ->windowSize(1240, 720)
+            ->save($temp_filename);
+    else return false;
+
+    // Upload the screenshot to the WordPress media library
+    $file_array = array(
+        'name'     => $pretty_place_name. '.jpg',
+        'tmp_name' => $temp_filename
+    );
+
+    require_once(ABSPATH . 'wp-admin/includes/file.php');
+    require_once(ABSPATH . 'wp-admin/includes/media.php');
+    require_once(ABSPATH . 'wp-admin/includes/image.php');
+
+    $attachment_id = media_handle_sideload($file_array, 0);
+    
+    if (is_wp_error($attachment_id)) {
+        @unlink($temp_filename);
+        return false;
+    }
+
+    $screenshotImageArray = array($attachment_id, wp_get_attachment_url($attachment_id));
+
+    // Return the URL of the uploaded image
+    return $screenshotImageArray;
 }
