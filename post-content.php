@@ -22,7 +22,7 @@
         $post_content .= '</div>';
 
         // WEBSITE SCREENSHOT
-        if ($page_screenshot){
+        if (isset($page_screenshot) && $page_screenshot){
             $post_content .= '<div class="wp-block-column is-vertically-aligned-center is-layout-flow wp-block-column-is-layout-flow">';
 
                 $post_content .= '<figure class="wp-block-image size-large"><img src="' . $page_screenshot . '"></figure>';
@@ -41,11 +41,10 @@
 
     // GOOGLE PLACES REVIEWS (6)
     // TODO Add sixth review to CSV
-    // TODO Remove " and ' signs from reviews
         $post_content .= '<div class="wp-block-group is-content-justification-center is-nowrap is-layout-flex wp-container-4 wp-block-group-is-layout-flex">';
-            $post_content .= '<div class="cts_review_wrapper">';
+            $post_content .= '<div class="ctp_review_wrapper">';
             foreach($reviewItems as $reviewItem){
-                $post_content .= $reviewItem !== "" ? "<div class='cts_review_item'>" . $reviewItem . "</div>" : "";
+                $post_content .= $reviewItem !== "" ? "<div class='ctp_review_item'>" . $reviewItem . "</div>" : "";
             }
             $post_content .= '</div>';
         $post_content .= '</div>';
