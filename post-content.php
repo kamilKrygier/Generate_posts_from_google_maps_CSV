@@ -11,7 +11,7 @@
                 // TODO Add email to CSV
                 // $post_content .= '<li>{{HERE PLACE "Email"}}</li>';
                 $post_content .= (!empty($phone)) ? "<li><span>Telefon: <a href='tel:$phone'>$phone</a></span></li>" : "";
-                $post_content .= (!empty($mail)) ? "<li><span>Mail: <a href='mailto:$mail'>$mail</a></span></li>" : "";
+                // $post_content .= (!empty($mail)) ? "<li><span>Mail: <a href='mailto:$mail'>$mail</a></span></li>" : "";
                 $post_content .= (!empty($URLItem)) ? "<li><span>Strona internetowa: <a href='$URLItem'>$URLItem</a></span></li>" : "";
                 $post_content .= (!empty($addressItem)) ? "<li><span>Adres: $addressItem</span></li>" : "";
                 $post_content .= (!empty($pretty_opening_hours)) ? "<li><span>Godziny otwarcia: $pretty_opening_hours</span></li>" : "";
