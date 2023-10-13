@@ -136,21 +136,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     // MAKE OPENAI API CALL
                     // $post_content = generateArticle($nazwaItem, $longitudeItem, $latitudeItem, $addressArray, $openingHours, $reviewItems, $businessCategory, $pricesItem);
-                    $prompt = " Przygotuj mi artykuł w html dla wordpress (składnia edytora Gutenberg) w języku polskim, pod pozycjonowanie w Google. Musi zawierać przynajmniej 800 słów oraz być podzielony na nagłówki h3, paragrafy, sekcję FAQ wraz z odpowiedziami na pytania (sekcja faq ma być podzielona na listę numerowaną z wykorzystaniem tagów HTML, czyli tagów `ol` oraz `li`) oraz każdy dział artykułu, powinien się znaleźć w elemencie <div>. Bazuj na podanych zmiennych:
-                    Nazwa firmy: $nazwaItem,
-                    Numer telefonu: $phone,
-                    Długość geogreficzna: $longitudeItem,
-                    Szerokość geograficzna: $latitudeItem,
-                    Adres: " . $addressArray['street'] . ', ' . $addressArray['city']['post_code'] . ' ' . $addressArray['city']['city_name'] . ', ' . $addressArray['country'] . ",
-                    Godziny otwarcia: " . $openingHours . " (ale nie wyświetlaj dodatkowo ich na stronie),
-                    Adres strony internetowej: $URLItem,
-                    Kategoria biznesu: $businessCategory,
-                    Przedział cenowy produktow: $pricesItem,
-                    Pamiętaj, aby każdy dział artykułu podzielić na nagłówki h3";
+                    // $prompt = " Przygotuj mi artykuł w html dla wordpress (składnia edytora Gutenberg) w języku polskim, pod pozycjonowanie w Google. Musi zawierać przynajmniej 800 słów oraz być podzielony na nagłówki h3, paragrafy, sekcję FAQ wraz z odpowiedziami na pytania (sekcja faq ma być podzielona na listę numerowaną z wykorzystaniem tagów HTML, czyli tagów `ol` oraz `li`) oraz każdy dział artykułu, powinien się znaleźć w elemencie <div>. Bazuj na podanych zmiennych:
+                    // Nazwa firmy: $nazwaItem,
+                    // Numer telefonu: $phone,
+                    // Długość geogreficzna: $longitudeItem,
+                    // Szerokość geograficzna: $latitudeItem,
+                    // Adres: " . $addressArray['street'] . ', ' . $addressArray['city']['post_code'] . ' ' . $addressArray['city']['city_name'] . ', ' . $addressArray['country'] . ",
+                    // Godziny otwarcia: " . $openingHours . " (ale nie wyświetlaj dodatkowo ich na stronie),
+                    // Adres strony internetowej: $URLItem,
+                    // Kategoria biznesu: $businessCategory,
+                    // Przedział cenowy produktow: $pricesItem,
+                    // Pamiętaj, aby każdy dział artykułu podzielić na nagłówki h3";
+
+                    $prompt = '
+                    Plik CSV:
+                    Nazwa,Telefon,Adres,"Godziny otwarcia","Strona internetowa","Opinia 1","Opinia 2","Opinia 3","Opinia 4","Opinia 5","Opinia 6",Typ,"Wysokość cen",Latitude,Longitude
+                    '.$nazwaItem.','.$phone.','.$addressItem.','.$openingHours.', '.$URLItem.', '.$reviewItems[0].','.$reviewItems[1].', '.$reviewItems[2].', '.$reviwItems[3].', '.$reviewItems[4].', '.$reviewItems[5].','.$typeItem.','.$pricesItem.','.$latitudeItem.','.$longitudeItem.'
+
+
+                    Bazując na podanych danych, przygotuj opis na stronę internetową w HTML (bez tagów doctype,head). Opis powinien być podzielony na konkretne działy:
+                    - Informacje ogólne (Nazwa firmy w nagłówku h2, typ firmy, opis firmy)
+                    - Wybrane opinie klientów (wypisz w elementach div poszczególne opinie i nie wyświetlaj pustych opinii)
+                    - Podsumowanie opinii (podsumuj opinie od klientów i bazując na nich wykonaj podsumowanie firmy). W razie braku podanych informacji w danym dziale, zostaw informację "Brak danych".
+                    ';
         
 
                     // Generate post content with OpenAI
-                    $generated_post_content = generateContentWithOpenAI($prompt);
+                    $generated_post_content = generateContentWithOpenAI($prompt, 2000);
 
 
                     if($generated_post_content){

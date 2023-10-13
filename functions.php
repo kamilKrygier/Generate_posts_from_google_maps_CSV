@@ -141,7 +141,7 @@ function signUrl($url, $secret){
 
 }
 
-function generateContentWithOpenAI($prompt) {
+function generateContentWithOpenAI($prompt, $maxTokens) {
     echo "<script>jQuery('.kk_spinner_wrapper').fadeIn().css('display', 'flex');</script>";
 
     $client = new Client(['base_uri' => 'https://api.openai.com/']);
@@ -164,7 +164,7 @@ function generateContentWithOpenAI($prompt) {
                         'content' => $prompt
                     ]
                 ],
-                'max_tokens' => 2000
+                'max_tokens' => $maxTokens
             ]
         ]);
 

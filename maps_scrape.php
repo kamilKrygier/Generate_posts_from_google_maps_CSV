@@ -67,9 +67,11 @@ if (isset($_POST['submit']) && isset($_POST['place_category'])) {
                 ];
 
                 $details = fetchUrl($google_places_base_details_url, $detailsParams);
-                $reviews = array_slice(array_filter($details["result"]["reviews"] ?? [], function($review) {
-                    return $review["rating"] == 5;
-                }), 0, 6);
+                // $reviews = array_slice(array_filter($details["result"]["reviews"] ?? [], function($review) {
+                //     return $review["rating"] == 5;
+                // }), 0, 6);
+                // TODO check if below $reviews contains first 6 reviews (no matter rating)
+                $reviews = array_slice($details["result"]["reviews"] ?? [], 0, 6);
 
                 debug_log("Place name: {$details['result']['name']}");
                 
