@@ -12,7 +12,7 @@
                 // $post_content .= '<li>{{HERE PLACE "Email"}}</li>';
                 $post_content .= (!empty($phone)) ? "<li><span>Telefon: <a href='tel:$phone'>$phone</a></span></li>" : "";
                 // $post_content .= (!empty($mail)) ? "<li><span>Mail: <a href='mailto:$mail'>$mail</a></span></li>" : "";
-                $post_content .= (!empty($URLItem)) ? "<li><span>Strona internetowa: <a href='$URLItem'>$URLItem</a></span></li>" : "";
+                $post_content .= (!empty($parsedURL)) ? "<li><span>Strona internetowa: <a href='$parsedURL'>$parsedURL</a></span></li>" : "";
                 $post_content .= (!empty($addressItem)) ? "<li><span>Adres: $addressItem</span></li>" : "";
                 $post_content .= (!empty($pretty_opening_hours)) ? "<li><span>Godziny otwarcia: $pretty_opening_hours</span></li>" : "";
                 $post_content .= (!empty($businessCategory)) ? "<li><span>Kategoria: $businessCategory</span></li>" : "";
@@ -61,7 +61,7 @@
     
 
     // DISPLAY AI GENERATED CONTENT
-        $post_content .= '<h2 class="wp-block-heading">Więcej o firmie:</h2>';
+        // $post_content .= '<h2 class="wp-block-heading">Więcej o firmie:</h2>';
 
-        $post_content .= $generated_post_content;
+        // $post_content .= $generated_post_content;
     // -----------------------------------------

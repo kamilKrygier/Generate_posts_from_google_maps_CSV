@@ -74,6 +74,72 @@ function csv_to_posts_menu(){
 add_action('admin_menu', 'csv_to_posts_menu');
 
 
+// Batch action - generate content with AI
+function generateContentWithOpenAIBatchAction($actions) {
+    $actions['generate_content_with_openai'] = 'Generate content with AI'; // Change 'Generate content with openai' to your desired action label
+    return $actions;
+}
+add_filter('bulk_actions-edit-post', 'generateContentWithOpenAIBatchAction');
+
+
+// Handle the Generate content with openai
+function generateContentWithOpenAIBatchActionCallback() {
+    if (isset($_REQUEST['action']) && $_REQUEST['action'] === 'custom_action') {
+        $post_ids = isset($_REQUEST['post']) ? $_REQUEST['post'] : array();
+        
+        // Split the post IDs into batches of 10
+        $batches = array_chunk($post_ids, 10);
+
+        foreach ($batches as $batch){
+            
+            debug_log("BATCH STARTED - UPDATE POST WITH AI GENERATED CONTENT");
+            foreach ($batch as $post_id) {
+                if(!get_post_meta('ai_genrated_content')){
+                    debug_log("Working on post with ID=$post_id");
+
+                    // Get the post object by post ID
+                    $post = get_post($post_id);
+
+                    if($post instanceof WP_Post){
+                        // Extract the post content from the post object
+                        $post_content = apply_filters('the_content', $post->post_content);
+                        $post_title = apply_filters('the_title', $post->post_title);
+
+                        // MAKE OPENAI API CALL
+                        $prompt = "Podane dane: $post_content
+                        
+                        Bazując na podanych danych, przygotuj opis na stronę internetową w HTML (bez tagów doctype,head). Opis powinien być podzielony na konkretne działy:
+                        - Informacje ogólne (Nazwa firmy w nagłówku h2 (nazwa firmy, to $post_title), typ firmy, opis firmy)
+                        - Wybrane opinie klientów (wypisz w elementach div poszczególne opinie i nie wyświetlaj pustych opinii)
+                        - Podsumowanie opinii (podsumuj opinie od klientów i bazując na nich wykonaj podsumowanie firmy). W razie braku podanych informacji w danym dziale, zostaw informację 'Brak danych'.
+                        ";
+
+                        $generated_post_content = generateContentWithOpenAI($prompt, 2000);
+
+                        if(!empty($generated_post_content)){
+                            debug_log("AI content has been generated for post with ID=$post_id");
+                            $post_content .= $generated_post_content;
+                            $post_updated = wp_update_post(array('ID' => $post_id, 'post_content' => $post_content));
+
+                            if(is_wp_error( $post_updated )) debug_log("There was an error while updating post");
+                            else{
+                                debug_log("Post with ID=$post_id has been updated");
+                                
+                                // If AI generated content was added to post, than add info to post that it already contains AI generated content
+                                add_post_meta( $post_id, 'ai_genrated_content', true);
+                            }
+                            
+                        }
+                    }
+                } else debug_log("Post with ID=$post_id, already has AI generated content!");
+            }
+            debug_log("BATCH ENDED");
+        }
+    }
+}
+add_action('admin_action_custom_action', 'generateContentWithOpenAIBatchActionCallback');
+
+
 // Upload posts from CSV
 function csv_to_posts_upload_page(){
     include_once('upload_from_csv.php');
@@ -88,6 +154,7 @@ function csv_to_posts_upload_page(){
     echo '<style></style>';
 
 }
+
 
 // Scrape Google Places
 function google_places_scrapper(){
@@ -107,6 +174,7 @@ function google_places_scrapper(){
     echo '<div class="kk_spinner_wrapper"><div class="kk_spinner"></div></div>';
 }
 
+
 // Improved sanitizeForCsv function
 function sanitizeForCsv($string) {
     $string = trim($string, '"');  // Remove surrounding double quotes
@@ -119,6 +187,7 @@ function sanitizeForCsv($string) {
 
     return $string;
 }
+
 
 function signUrl($url, $secret){
 
@@ -140,6 +209,7 @@ function signUrl($url, $secret){
     return $url . "&signature=" . $encodedSignature;
 
 }
+
 
 function generateContentWithOpenAI($prompt, $maxTokens) {
     echo "<script>jQuery('.kk_spinner_wrapper').fadeIn().css('display', 'flex');</script>";
@@ -178,6 +248,7 @@ function generateContentWithOpenAI($prompt, $maxTokens) {
         return null;
     }
 }
+
 
 // function upload_page_screenshot($URLItem, $pretty_place_name){
 

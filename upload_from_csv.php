@@ -103,6 +103,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Validate page URL
                 if(!filter_var($URLItem, FILTER_VALIDATE_URL)) return;
                 
+                // Parse the URL
+                $parsedURL = parse_url($URLItem);
+                $parsedURL = $parsedURL['scheme'] . '://' . $parsedURL['host'] . $parsedURL['path'];
 
                 // Validate Type of business
                 $typeItemParts = explode(',', $typeItem);
@@ -135,94 +138,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if(!get_page_by_path(sanitize_title($pretty_place_name), OBJECT, 'post')){
 
                     // MAKE OPENAI API CALL
-                    // $post_content = generateArticle($nazwaItem, $longitudeItem, $latitudeItem, $addressArray, $openingHours, $reviewItems, $businessCategory, $pricesItem);
-                    // $prompt = " Przygotuj mi artykuł w html dla wordpress (składnia edytora Gutenberg) w języku polskim, pod pozycjonowanie w Google. Musi zawierać przynajmniej 800 słów oraz być podzielony na nagłówki h3, paragrafy, sekcję FAQ wraz z odpowiedziami na pytania (sekcja faq ma być podzielona na listę numerowaną z wykorzystaniem tagów HTML, czyli tagów `ol` oraz `li`) oraz każdy dział artykułu, powinien się znaleźć w elemencie <div>. Bazuj na podanych zmiennych:
-                    // Nazwa firmy: $nazwaItem,
-                    // Numer telefonu: $phone,
-                    // Długość geogreficzna: $longitudeItem,
-                    // Szerokość geograficzna: $latitudeItem,
-                    // Adres: " . $addressArray['street'] . ', ' . $addressArray['city']['post_code'] . ' ' . $addressArray['city']['city_name'] . ', ' . $addressArray['country'] . ",
-                    // Godziny otwarcia: " . $openingHours . " (ale nie wyświetlaj dodatkowo ich na stronie),
-                    // Adres strony internetowej: $URLItem,
-                    // Kategoria biznesu: $businessCategory,
-                    // Przedział cenowy produktow: $pricesItem,
-                    // Pamiętaj, aby każdy dział artykułu podzielić na nagłówki h3";
-
-                    $prompt = '
-                    Plik CSV:
-                    Nazwa,Telefon,Adres,"Godziny otwarcia","Strona internetowa","Opinia 1","Opinia 2","Opinia 3","Opinia 4","Opinia 5","Opinia 6",Typ,"Wysokość cen",Latitude,Longitude
-                    '.$nazwaItem.','.$phone.','.$addressItem.','.$openingHours.', '.$URLItem.', '.$reviewItems[0].','.$reviewItems[1].', '.$reviewItems[2].', '.$reviwItems[3].', '.$reviewItems[4].', '.$reviewItems[5].','.$typeItem.','.$pricesItem.','.$latitudeItem.','.$longitudeItem.'
-
-
-                    Bazując na podanych danych, przygotuj opis na stronę internetową w HTML (bez tagów doctype,head). Opis powinien być podzielony na konkretne działy:
-                    - Informacje ogólne (Nazwa firmy w nagłówku h2, typ firmy, opis firmy)
-                    - Wybrane opinie klientów (wypisz w elementach div poszczególne opinie i nie wyświetlaj pustych opinii)
-                    - Podsumowanie opinii (podsumuj opinie od klientów i bazując na nich wykonaj podsumowanie firmy). W razie braku podanych informacji w danym dziale, zostaw informację "Brak danych".
-                    ';
+                    // $prompt = 'Bazując na podanych danych, przygotuj opis na stronę internetową w HTML (bez tagów doctype,head). Opis powinien być podzielony na konkretne działy:
+                    // - Informacje ogólne (Nazwa firmy w nagłówku h2 (nazwa firmy), typ firmy, opis firmy)
+                    // - Wybrane opinie klientów (wypisz w elementach div poszczególne opinie i nie wyświetlaj pustych opinii)
+                    // - Podsumowanie opinii (podsumuj opinie od klientów i bazując na nich wykonaj podsumowanie firmy). W razie braku podanych informacji w danym dziale, zostaw informację "Brak danych".
+                    // ';
         
-
+                    // TODO move generateContentWithOpenAI to batch actions to generate content after posts are created
                     // Generate post content with OpenAI
-                    $generated_post_content = generateContentWithOpenAI($prompt, 2000);
+                    // $generated_post_content = generateContentWithOpenAI($prompt, 2000);
+
+                    // Declare new variable for post content or clear existing one
+                    $post_content = "";
+
+                    // GET PAGE SCREENSHOT
+                    // TODO Add screenshot functionality (currently replaced by placeholder)
+                    // $page_screenshot = upload_page_screenshot($URLItem, $pretty_place_name);
 
 
-                    if($generated_post_content){
-
-                        // Declare new variable for post content or clear existing one
-                        $post_content = "";
-
-                        // GET PAGE SCREENSHOT
-                        // TODO Add screenshot functionality (currently replaced by placeholder)
-                        // $page_screenshot = upload_page_screenshot($URLItem, $pretty_place_name);
+                    // INCLUDE POST CONTENT
+                    include('post-content.php');
 
 
-                        // INCLUDE POST CONTENT
-                        include('post-content.php');
-
-
-                        // INSERT POST
-                        // Check if the category exists
-                        $category_exists = term_exists($businessCategory, 'category'); 
-                        
-                        // If it doesn't exist, create it
-                        if (!$category_exists) {
-                            wp_insert_term(
-                                $businessCategory, // the term 
-                                'category', // the taxonomy
-                                array(
-                                    'slug' => sanitize_title($businessCategory)
-                                )
-                            );
-                        }
-
-                        $catID = get_cat_ID ( $businessCategory );
-
-                        $post_data = array(
-                            'post_title'        => $pretty_place_name,
-                            'post_content'      => $post_content,
-                            'post_status'       => 'publish',
-                            'post_type'         => 'post',
-                            'post_author'       => get_current_user_id(),
-                            'post_category'     => array($catID),
-                            'comment_status'    => 'closed',
+                    // INSERT POST
+                    // Check if the category exists
+                    $category_exists = term_exists($businessCategory, 'category'); 
+                    
+                    // If it doesn't exist, create it
+                    if (!$category_exists) {
+                        wp_insert_term(
+                            $businessCategory, // the term 
+                            'category', // the taxonomy
+                            array(
+                                'slug' => sanitize_title($businessCategory)
+                            )
                         );
+                    }
+
+                    $catID = get_cat_ID ( $businessCategory );
+
+                    $post_data = array(
+                        'post_title'        => $pretty_place_name,
+                        'post_content'      => $post_content,
+                        'post_status'       => 'publish',
+                        'post_type'         => 'post',
+                        'post_author'       => get_current_user_id(),
+                        'post_category'     => array($catID),
+                        'comment_status'    => 'closed',
+                    );
+                    
+                    // Insert the post and get the post ID
+                    $post_id = wp_insert_post( $post_data );
+                    echo "<script>jQuery('.kk_spinner_wrapper').fadeOut();</script>";
+                    if( $post_id ){
+
+                        debug_log("Post was created with the ID= $post_id");
                         
-                        // Insert the post and get the post ID
-                        $post_id = wp_insert_post( $post_data );
-                        echo "<script>jQuery('.kk_spinner_wrapper').fadeOut();</script>";
-                        if( $post_id ){
+                        if(isset($page_screenshot) && $page_screenshot) set_post_thumbnail( $post_id, $page_screenshot[0] );
+                        else set_post_thumbnail( $post_id, $placeholder_id );
 
-                            debug_log("Post was created with the ID= $post_id");
-                            
-                            if(isset($page_screenshot) && $page_screenshot) set_post_thumbnail( $post_id, $page_screenshot[0] );
-                            else set_post_thumbnail( $post_id, $placeholder_id );
+                        echo "Post was created with the ID= $post_id, with attachment with ID= $placeholder_id";
 
-                            echo "Post was created with the ID= $post_id, with attachment with ID= $placeholder_id";
-
-                        } else{
-                            debug_log("Failed to create post with ID= $post_id");
-                            echo "Failed to create post with ID= $post_id \n";
-                        }
-                    } else debug_log("OpenAI doesn't returned post content.");
+                    } else{
+                        debug_log("Failed to create post with ID= $post_id");
+                        echo "Failed to create post with ID= $post_id \n";
+                    }
                 } else debug_log("Post $pretty_place_name is already created"); 
             }
             debug_log("Processed batch " . ($i + 1));
