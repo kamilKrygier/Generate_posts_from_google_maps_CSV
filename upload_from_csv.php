@@ -113,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Parse the URL
                 if($URLItem != ""){
                     $parsedURL = parse_url($URLItem);
-                    $parsedURL = $parsedURL['scheme'] . '://' . $parsedURL['host'] . $parsedURL['path'];
+                    $parsedURL = isset($parsedURL['path']) ? $parsedURL['scheme'] . '://' . $parsedURL['host'] . $parsedURL['path'] : $parsedURL['scheme'] . '://' . $parsedURL['host'];
                 }
 
                 // Validate Type of business

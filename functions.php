@@ -136,10 +136,24 @@ function generateContentWithOpenAIBatchActionCallback() {
                 } else debug_log("Post with ID=$post_id, already has AI generated content!");
             }
             debug_log("BATCH ENDED");
+            set_transient('batch_process_generate_articles_content_complete', true, 5 * MINUTE_IN_SECONDS);
         }
     }
 }
 add_action('admin_action_generate_content_with_openai', 'generateContentWithOpenAIBatchActionCallback');
+
+function display_batch_process_notice() {
+    if (get_transient('batch_process_complete')) {
+        ?>
+        <div class="notice notice-success is-dismissible">
+            <p><?php _e('Batch process completed successfully!', 'your-text-domain'); ?></p>
+        </div>
+        <?php
+        // Don't forget to delete the transient so that the message isn't shown on subsequent page loads
+        delete_transient('batch_process_complete');
+    }
+}
+add_action('admin_notices', 'display_batch_process_notice');
 
 
 // Upload posts from CSV
@@ -253,6 +267,28 @@ function generateContentWithOpenAI($prompt, $maxTokens) {
         return null;
     }
 }
+
+// Add a new /wp-admin/edit.php?mode=list column header
+function add_ai_generated_column_header($columns) {
+    $columns['ai_generated'] = 'AI Generated'; // 'AI Generated' is the column title
+    return $columns;
+}
+add_filter('manage_posts_columns', 'add_ai_generated_column_header');
+
+// Display data in the new /wp-admin/edit.php?mode=list column
+function add_ai_generated_column_content($column_name, $post_id) {
+    if ('ai_generated' === $column_name) {
+        $is_ai_generated = get_post_meta($post_id, 'ai_genrated_content', true);
+
+        if ($is_ai_generated) {
+            echo 'AI generated';
+        } else {
+            echo '—';
+        }
+    }
+}
+add_action('manage_posts_custom_column', 'add_ai_generated_column_content', 10, 2);
+
 
 
 // function upload_page_screenshot($URLItem, $pretty_place_name){
