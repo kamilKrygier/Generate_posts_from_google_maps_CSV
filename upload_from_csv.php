@@ -123,13 +123,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
                 // Validate Longitude and Latitude and build map URL
+                // TODO Save image with URL $signedUrl to media library to do not use API that often :)
+                // TODO Restrict this API key later
                 if(!is_numeric($longitudeItem) || !is_numeric($latitudeItem)) {
                     debug_log('Invalid longitude or latitude in one of the rows.');
                     return;
                 }else{
-                    $url = "https://maps.googleapis.com/maps/api/staticmap?center=$longitudeItem,$latitudeItem&zoom=18&size=1200x600&scale=2&markers=size:mid|color:red|$longitudeItem,$latitudeItem&key=" . MAPS_STATIC_API_KEY;
-                    debug_log($url);
-                    $signedUrl = signUrl($url, MAPS_STATIC_API_SECRET);
+                    $mapUrl = "https://maps.googleapis.com/maps/api/staticmap?center=$latitudeItem,$longitudeItem&zoom=18&size=1200x600&scale=2&markers=size:mid|color:red|$latitudeItem,$longitudeItem&key=" . MAPS_STATIC_API_KEY;
+                    // debug_log($mapUrl);
+                    $signedUrl = signUrl($mapUrl, MAPS_STATIC_API_SECRET);
                 }
 
                 // Create pretty place name
@@ -197,18 +199,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if(isset($page_screenshot) && $page_screenshot) set_post_thumbnail( $post_id, $page_screenshot[0] );
                         else set_post_thumbnail( $post_id, $placeholder_id );
 
-                        echo "Post was created with the ID= $post_id, with attachment with ID= $placeholder_id";
+                        echo "Post was created with the ID= $post_id, with attachment with ID= $placeholder_id<br>";
 
                     } else{
                         debug_log("Failed to create post with ID= $post_id");
-                        echo "Failed to create post with ID= $post_id \n";
+                        echo "Failed to create post with ID= $post_id<br>";
                     }
                 } else debug_log("Post $pretty_place_name is already created"); 
             }
             debug_log("Processed batch " . ($i + 1));
         }
         debug_log('All batches has been finished!');
-        echo "All batches has been finished!";
+        echo "All batches has been finished!<br>";
         return;
     }
 }

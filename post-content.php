@@ -55,7 +55,7 @@
     $post_content .= '<h2 class="wp-block-heading">Jak dojechać?</h2>';
 
     // GOOGLE STATIC MAPS API IMAGE
-        $post_content .= "<img class='ctp_map_image' src='$signedUrl' alt='$pretty_place_name'><br>";
+        $post_content .= "<a href='https://www.google.com/maps/search/$latitudeItem,$longitudeItem' target='_blank'><img class='ctp_map_image' src='$signedUrl' alt='$pretty_place_name'></a><br>";
         $post_content .= "<div class='wp-block-buttons is-layout-flex wp-block-buttons-is-layout-flex'><div class='wp-block-button'><a class='wp-block-button__link wp-element-button' href='https://www.google.com/maps/search/$latitudeItem,$longitudeItem'>Jak dojadę ?</a></div></div>";
     // -----------------------------------------
     

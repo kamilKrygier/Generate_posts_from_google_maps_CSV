@@ -84,17 +84,18 @@ add_filter('bulk_actions-edit-post', 'generateContentWithOpenAIBatchAction');
 
 // Handle the Generate content with openai
 function generateContentWithOpenAIBatchActionCallback() {
-    if (isset($_REQUEST['action']) && $_REQUEST['action'] === 'custom_action') {
-        $post_ids = isset($_REQUEST['post']) ? $_REQUEST['post'] : array();
+    $request_action = sanitize_text_field($_REQUEST['action']);
+    if ($request_action === 'generate_content_with_openai') {
+        $post_ids = (isset($_REQUEST['post']) && is_array($_REQUEST['post']) && array_map('intval', $_REQUEST['post'])) ? $_REQUEST['post'] : array();
         
-        // Split the post IDs into batches of 10
-        $batches = array_chunk($post_ids, 10);
+        // Split the post IDs into batches of ...
+        $batches = array_chunk($post_ids, 5);
 
         foreach ($batches as $batch){
             
             debug_log("BATCH STARTED - UPDATE POST WITH AI GENERATED CONTENT");
             foreach ($batch as $post_id) {
-                if(!get_post_meta('ai_genrated_content')){
+                if(!get_post_meta($post_id, 'ai_genrated_content', true)){
                     debug_log("Working on post with ID=$post_id");
 
                     // Get the post object by post ID
@@ -108,13 +109,14 @@ function generateContentWithOpenAIBatchActionCallback() {
                         // MAKE OPENAI API CALL
                         $prompt = "Podane dane: $post_content
                         
-                        Bazując na podanych danych, przygotuj opis na stronę internetową w HTML (bez tagów doctype,head). Opis powinien być podzielony na konkretne działy:
-                        - Informacje ogólne (Nazwa firmy w nagłówku h2 (nazwa firmy, to $post_title), typ firmy, opis firmy)
-                        - Wybrane opinie klientów (wypisz w elementach div poszczególne opinie i nie wyświetlaj pustych opinii)
-                        - Podsumowanie opinii (podsumuj opinie od klientów i bazując na nich wykonaj podsumowanie firmy). W razie braku podanych informacji w danym dziale, zostaw informację 'Brak danych'.
+                        Bazując na podanych danych, przygotuj opis na stronę internetową w HTML (bez tagów doctype,head). Opis powinien być podzielony na konkretne działy (nagłówki h2):
+                        - Informacje ogólne (Napisz 100 słów opisu o firmie, w którym zawrzesz informacje o ewentualnym asortymencie, obsłudze, lokalizacji, itd.),
+                        - Podsumowanie opinii (podsumuj opinie od klientów i bazując na nich wykonaj podsumowanie firmy, czyli napisz parę słów o tym, o czym ludzie mówią w tych opiniach),
+                        - Lokalizacja (Opowiedz więcej o okolicy w pobliżu podanego adresu firmy),
+                        - Kontakt (Zachęć do kontaktu z firmą poprzez numer telefonu (jeśli podano), stronę internetową (jeśli podano) oraz osobiste odwiedziny pod podanym adresem (podaj adres)).
                         ";
 
-                        $generated_post_content = generateContentWithOpenAI($prompt, 2000);
+                        $generated_post_content = generateContentWithOpenAI($prompt, 2200);
 
                         if(!empty($generated_post_content)){
                             debug_log("AI content has been generated for post with ID=$post_id");
@@ -124,7 +126,7 @@ function generateContentWithOpenAIBatchActionCallback() {
                             if(is_wp_error( $post_updated )) debug_log("There was an error while updating post");
                             else{
                                 debug_log("Post with ID=$post_id has been updated");
-                                
+
                                 // If AI generated content was added to post, than add info to post that it already contains AI generated content
                                 add_post_meta( $post_id, 'ai_genrated_content', true);
                             }
@@ -137,7 +139,7 @@ function generateContentWithOpenAIBatchActionCallback() {
         }
     }
 }
-add_action('admin_action_custom_action', 'generateContentWithOpenAIBatchActionCallback');
+add_action('admin_action_generate_content_with_openai', 'generateContentWithOpenAIBatchActionCallback');
 
 
 // Upload posts from CSV
@@ -212,9 +214,12 @@ function signUrl($url, $secret){
 
 
 function generateContentWithOpenAI($prompt, $maxTokens) {
+    debug_log("~Begin content generation~");
     echo "<script>jQuery('.kk_spinner_wrapper').fadeIn().css('display', 'flex');</script>";
 
     $client = new Client(['base_uri' => 'https://api.openai.com/']);
+
+    debug_log("~Current prompt:\n $prompt\n");
 
     try {
         $response = $client->post('v1/chat/completions', [
