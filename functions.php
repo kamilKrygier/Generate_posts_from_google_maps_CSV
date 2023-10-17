@@ -28,8 +28,7 @@ function ctp_styles_enqueue() {
 if(is_admin()) add_action('admin_enqueue_scripts', 'ctp_admin_styles_enqueue');
     else add_action('wp_enqueue_scripts', 'ctp_styles_enqueue');
 
-// TODO Merge this plugin with Google maps scrapper (on GitHub)
-// TODO Remember to add restrictions to Google Maps API at console.cloud.google.com
+// TODO Remember to add restrictions to Google Maps STATIC/PLACES API at console.cloud.google.com after moving it out of localhost
 
 
 
@@ -47,7 +46,7 @@ function debug_log($message) {
         $current = file_get_contents($logFile);
         $current .= $message . "\n";  // Append received message to file content
         file_put_contents($logFile, $current);        
-    }
+    };
 }
 
 
@@ -109,7 +108,7 @@ function generateContentWithOpenAIBatchActionCallback() {
                         // MAKE OPENAI API CALL
                         $prompt = "Podane dane: $post_content
                         
-                        Bazując na podanych danych, przygotuj opis na stronę internetową w HTML (bez tagów doctype,head). Opis powinien być podzielony na konkretne działy (nagłówki h2):
+                        Bazując na podanych danych, przygotuj opis na stronę internetową (pisz w trzeciej osobie liczby pojedynczej języka polskiego) w HTML (bez tagów doctype,head). Opis powinien być podzielony na konkretne działy (nagłówki h2):
                         - Informacje ogólne (Napisz 100 słów opisu o firmie, w którym zawrzesz informacje o ewentualnym asortymencie, obsłudze, lokalizacji, itd.),
                         - Podsumowanie opinii (podsumuj opinie od klientów i bazując na nich wykonaj podsumowanie firmy, czyli napisz parę słów o tym, o czym ludzie mówią w tych opiniach),
                         - Lokalizacja (Opowiedz więcej o okolicy w pobliżu podanego adresu firmy),
@@ -289,42 +288,44 @@ function add_ai_generated_column_content($column_name, $post_id) {
 }
 add_action('manage_posts_custom_column', 'add_ai_generated_column_content', 10, 2);
 
+function download_image_to_media_library($path){
+    // Ensure the required functions are available
+    require_once(ABSPATH . 'wp-admin/includes/image.php');
+    require_once(ABSPATH . 'wp-admin/includes/file.php');
+    require_once(ABSPATH . 'wp-admin/includes/media.php');
 
+    // Download the image from the source URL
+    $temp_file = download_url($signedUrl);
 
-// function upload_page_screenshot($URLItem, $pretty_place_name){
+    // Check if there was an error
+    if (is_wp_error($temp_file)) {
+        throw new Exception($temp_file->get_error_message());
+    }
 
-//     // Declare image name and temporary path to file
-//     $imageName = sanitize_text_field($pretty_place_name);
-//     $upload_dir = wp_upload_dir();
-//     $temp_filename = $upload_dir['basedir'] . '/'.$pretty_place_name.'.jpg';
+    // Set up the array of arguments for wp_insert_attachment()
+    $file_args = array(
+        'name'     => basename($signedUrl),
+        'type'     => wp_check_filetype(basename($signedUrl), null)['type'],
+        'file'     => $temp_file,
+        'post_title'     => basename($signedUrl),
+        'post_content'   => '',
+        'post_status'    => 'inherit'
+    );
 
-//     // Get temporary screenshot
-//     if(!empty($URLItem) && filter_var($URLItem, FILTER_VALIDATE_URL))
-//         Browsershot::url($URLItem)
-//             ->setScreenshotType('jpeg', 86)
-//             ->windowSize(1240, 720)
-//             ->save($temp_filename);
-//     else return false;
+    // Insert the attachment
+    $attachment_id = wp_insert_attachment($file_args, $temp_file);
 
-//     // Upload the screenshot to the WordPress media library
-//     $file_array = array(
-//         'name'     => $pretty_place_name. '.jpg',
-//         'tmp_name' => $temp_filename
-//     );
+    // Check for an error
+    if (is_wp_error($attachment_id)) {
+        @unlink($temp_file);
+        throw new Exception($attachment_id->get_error_message());
+    }
 
-//     require_once(ABSPATH . 'wp-admin/includes/file.php');
-//     require_once(ABSPATH . 'wp-admin/includes/media.php');
-//     require_once(ABSPATH . 'wp-admin/includes/image.php');
+    // Generate attachment metadata
+    $attachment_metadata = wp_generate_attachment_metadata($attachment_id, $temp_file);
+    wp_update_attachment_metadata($attachment_id, $attachment_metadata);
 
-//     $attachment_id = media_handle_sideload($file_array, 0);
-    
-//     if (is_wp_error($attachment_id)) {
-//         @unlink($temp_filename);
-//         return false;
-//     }
+    // return URL of the uploaded image
+    return wp_get_attachment_url($attachment_id);
 
-//     $screenshotImageArray = array($attachment_id, wp_get_attachment_url($attachment_id));
-
-//     // Return the URL of the uploaded image
-//     return $screenshotImageArray;
-// }
+}

@@ -116,25 +116,134 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $parsedURL = isset($parsedURL['path']) ? $parsedURL['scheme'] . '://' . $parsedURL['host'] . $parsedURL['path'] : $parsedURL['scheme'] . '://' . $parsedURL['host'];
                 }
 
+
                 // Validate Type of business
-                $typeItemParts = explode(',', $typeItem);
-                switch($typeItemParts[0]){
-                    case 'jewelry_store':
-                        $businessCategory = 'Salon jubilerski';
-                        break;
-                    default:
-                        $businessCategory = 'Inne';
-                }
+                $businessCategoriesMapping = [
+                    'accounting' => 'Księgowość',
+                    'airport' => 'Lotnisko',
+                    'amusement_park' => 'Park Rozrywki',
+                    'aquarium' => 'Akwarium',
+                    'art_gallery' => 'Galeria Sztuki',
+                    'atm' => 'Bankomat',
+                    'bakery' => 'Piekarnia',
+                    'bank' => 'Bank',
+                    'bar' => 'Bar',
+                    'beauty_salon' => 'Salon Piękności',
+                    'bicycle_store' => 'Sklep rowerowy',
+                    'book_store' => 'Księgarnia',
+                    'bowling_alley' => 'Kręgielnia',
+                    'bus_station' => 'Dworzec Autobusowy',
+                    'cafe' => 'Kawiarnia',
+                    'campground' => 'Kemping',
+                    'car_dealer' => 'Dealer Samochodowy',
+                    'car_rental' => 'Wypożyczalnia Samochodów',
+                    'car_repair' => 'Warsztat Samochodowy',
+                    'car_wash' => 'Myjnia Samochodowa',
+                    'casino' => 'Kasyno',
+                    'cemetery' => 'Cmentarz',
+                    'church' => 'Kościół',
+                    'city_hall' => 'Ratusz',
+                    'clothing_store' => 'Sklep Odzieżowy',
+                    'convenience_store' => 'Sklep Spożywczy',
+                    'courthouse' => 'Sąd',
+                    'dentist' => 'Dentysta',
+                    'department_store' => 'Dom Handlowy',
+                    'doctor' => 'Lekarz',
+                    'drugstore' => 'Drogeria',
+                    'electrician' => 'Elektryk',
+                    'electronics_store' => 'Sklep Elektroniczny',
+                    'embassy' => 'Ambasada',
+                    'fire_station' => 'Straż Pożarna',
+                    'florist' => 'Kwiaciarnia',
+                    'funeral_home' => 'Dom Pogrzebowy',
+                    'furniture_store' => 'Sklep Meblowy',
+                    'gas_station' => 'Stacja Benzynowa',
+                    'gym' => 'Siłownia',
+                    'hair_care' => 'Salon Fryzjerski',
+                    'hardware_store' => 'Sklep Budowlany',
+                    'hindu_temple' => 'Świątynia Hinduistyczna',
+                    'home_goods_store' => 'Sklep Domowy',
+                    'hospital' => 'Szpital',
+                    'insurance_agency' => 'Agencja Ubezpieczeniowa',
+                    'jewelry_store' => 'Salon Jubilerski',
+                    'laundry' => 'Pralnia',
+                    'lawyer' => 'Prawnik',
+                    'library' => 'Biblioteka',
+                    'light_rail_station' => 'Stacja Kolejki Miejskiej',
+                    'liquor_store' => 'Sklep Alkoholowy',
+                    'local_government_office' => 'Urząd Miejski',
+                    'locksmith' => 'Ślusarz',
+                    'lodging' => 'Zakwaterowanie',
+                    'meal_delivery' => 'Dostawa Jedzenia',
+                    'meal_takeaway' => 'Jedzenie na Wynos',
+                    'mosque' => 'Meczet',
+                    'movie_rental' => 'Wypożyczalnia Filmów',
+                    'movie_theater' => 'Kino',
+                    'moving_company' => 'Firma Przeprowadzkowa',
+                    'museum' => 'Muzeum',
+                    'night_club' => 'Klub Nocny',
+                    'painter' => 'Malarz',
+                    'park' => 'Park',
+                    'parking' => 'Parking',
+                    'pet_store' => 'Sklep Zoologiczny',
+                    'pharmacy' => 'Apteka',
+                    'physiotherapist' => 'Fizjoterapeuta',
+                    'plumber' => 'Hydraulik',
+                    'police' => 'Policja',
+                    'post_office' => 'Poczta',
+                    'primary_school' => 'Szkoła Podstawowa',
+                    'real_estate_agency' => 'Agencja Nieruchomości',
+                    'restaurant' => 'Restauracja',
+                    'roofing_contractor' => 'Dekarz',
+                    'rv_park' => 'Parking dla Kamperów',
+                    'school' => 'Szkoła',
+                    'secondary_school' => 'Gimnazjum',
+                    'shoe_store' => 'Sklep Obuwniczy',
+                    'shopping_mall' => 'Centrum Handlowe',
+                    'spa' => 'Spa',
+                    'stadium' => 'Stadion',
+                    'storage' => 'Magazyn',
+                    'store' => 'Sklep',
+                    'subway_station' => 'Stacja Metra',
+                    'supermarket' => 'Supermarket',
+                    'synagogue' => 'Synagoga',
+                    'taxi_stand' => 'Postój Taxi',
+                    'tourist_attraction' => 'Atrakcja Turystyczna',
+                    'train_station' => 'Dworzec Kolejowy',
+                    'transit_station' => 'Stacja Przejazdowa',
+                    'travel_agency' => 'Biuro Podróży',
+                    'university' => 'Uniwersytet',
+                    'veterinary_care' => 'Opieka Weterynaryjna',
+                    'zoo' => 'Zoo'
+                ];
                 
+                $businessCategory = $businessCategoriesMapping[$typeItemParts[0]] ?? 'Inne';
+            
 
                 // Validate prices
-                // TODO prices are integers! Add switch to handle this
-                $pricesItem = (!empty($pricesItem)) ? $pricesItem : "Nie podano";
+                switch($pricesItem){
+                    case 5:
+                        $pricesItem = "Bardzo wysokie";
+                        break;
+                    case 4:
+                        $pricesItem = "Wysokie";
+                        break;
+                    case 3:
+                        $pricesItem = "Średnie";
+                        break;
+                    case 2:
+                        $pricesItem = "Niskie";
+                        break;
+                    case 1:
+                        $pricesItem = "Bardzo niskie";
+                        break;
+                    default:
+                        $pricesItem = "Nie podano";
+                }
 
 
                 // Validate Longitude and Latitude and build map URL
                 // TODO Save image with URL $signedUrl to media library to do not use API that often :)
-                // TODO Restrict this API key later if plugin will be move somewhere else than localhost
                 if(!is_numeric($longitudeItem) || !is_numeric($latitudeItem)) {
                     debug_log('Invalid longitude or latitude in one of the rows.');
                     continue;
@@ -142,6 +251,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $mapUrl = "https://maps.googleapis.com/maps/api/staticmap?center=$latitudeItem,$longitudeItem&zoom=18&size=1200x600&scale=2&markers=size:mid|color:red|$latitudeItem,$longitudeItem&key=" . MAPS_STATIC_API_KEY;
                     // debug_log($mapUrl);
                     $signedUrl = signUrl($mapUrl, MAPS_STATIC_API_SECRET);
+                    $signedUrl = download_image_to_media_library($signedUrl);
                 }
 
                 // Create pretty place name
@@ -152,10 +262,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Declare new variable for post content or clear existing one
                     $post_content = "";
 
-                    // GET PAGE SCREENSHOT
-                    // TODO Add screenshot functionality (currently replaced by placeholder)
-                    // $page_screenshot = upload_page_screenshot($URLItem, $pretty_place_name);
-
 
                     // INCLUDE POST CONTENT
                     include('post-content.php');
@@ -163,10 +269,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     // INSERT POST
                     // Check if the category exists
-                    $category_exists = term_exists($businessCategory, 'category'); 
-                    
                     // If it doesn't exist, create it
-                    if (!$category_exists) {
+                    if (!term_exists($businessCategory, 'category')) {
                         wp_insert_term(
                             $businessCategory, // the term 
                             'category', // the taxonomy

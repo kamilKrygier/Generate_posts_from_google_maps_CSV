@@ -8,7 +8,6 @@
             $post_content .= '<ul>';
             
             // INFO LIST
-                // TODO Add email to CSV
                 // $post_content .= '<li>{{HERE PLACE "Email"}}</li>';
                 $post_content .= (!empty($phone)) ? "<li><span>Telefon: <a href='tel:$phone'>$phone</a></span></li>" : "";
                 // $post_content .= (!empty($mail)) ? "<li><span>Mail: <a href='mailto:$mail'>$mail</a></span></li>" : "";
@@ -40,7 +39,6 @@
     $post_content .= '<div style="height:50px" aria-hidden="true" class="wp-block-spacer"></div>';
 
     // GOOGLE PLACES REVIEWS (6)
-    // TODO Add sixth review to CSV
         $post_content .= '<div class="wp-block-group is-content-justification-center is-nowrap is-layout-flex wp-container-4 wp-block-group-is-layout-flex">';
             $post_content .= '<div class="ctp_review_wrapper">';
             foreach($reviewItems as $reviewItem){
@@ -57,11 +55,4 @@
     // GOOGLE STATIC MAPS API IMAGE
         $post_content .= "<a href='https://www.google.com/maps/search/$latitudeItem,$longitudeItem' target='_blank'><img class='ctp_map_image' src='$signedUrl' alt='$pretty_place_name'></a><br>";
         $post_content .= "<div class='wp-block-buttons is-layout-flex wp-block-buttons-is-layout-flex'><div class='wp-block-button'><a class='wp-block-button__link wp-element-button' href='https://www.google.com/maps/search/$latitudeItem,$longitudeItem'>Jak dojadę ?</a></div></div>";
-    // -----------------------------------------
-    
-
-    // DISPLAY AI GENERATED CONTENT
-        // $post_content .= '<h2 class="wp-block-heading">Więcej o firmie:</h2>';
-
-        // $post_content .= $generated_post_content;
     // -----------------------------------------
