@@ -75,6 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Validate and process Address
                 $addressParts = explode(', ', $addressItem);
 
+                $addressParts[0] = isset($addressParts[0]) ? $addressParts[0] : '';
+                $addressParts[2] = isset($addressParts[2]) ? $addressParts[2] : '';
+
                 // Prepare the address array
                 $addressArray = [
                     'street' => trim($addressParts[0]),
@@ -83,9 +86,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ];
 
                 // Split city details
-                $cityParts = explode(' ', trim($addressParts[1]));
-                $addressArray['city']['post_code'] = trim($cityParts[0]);
-                $addressArray['city']['city_name'] = trim($cityParts[1]);
+                $secondFromLast = isset($addressParts[count($addressParts) - 2]) ? trim($addressParts[count($addressParts) - 2]) : '';
+                $cityParts = explode(' ', $secondFromLast);
+                debug_log("Current cityParts = $secondFromLast");
+
+                $addressArray['city']['post_code'] = isset($cityParts[0]) ? trim($cityParts[0]) : '';
+                $addressArray['city']['city_name'] = isset($cityParts[1]) ? trim($cityParts[1]) : '';
 
 
                 // Validate opening hours
@@ -105,8 +111,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 
                 // Parse the URL
-                $parsedURL = parse_url($URLItem);
-                $parsedURL = $parsedURL['scheme'] . '://' . $parsedURL['host'] . $parsedURL['path'];
+                if($URLItem != ""){
+                    $parsedURL = parse_url($URLItem);
+                    $parsedURL = $parsedURL['scheme'] . '://' . $parsedURL['host'] . $parsedURL['path'];
+                }
 
                 // Validate Type of business
                 $typeItemParts = explode(',', $typeItem);
