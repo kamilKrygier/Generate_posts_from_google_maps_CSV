@@ -7,7 +7,7 @@ $placeholder_id = 16;  // Replace with placeholder ID or page screenshot
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    echo "<script>jQuery('.kk_spinner_wrapper').fadeIn();</script>";
+    // echo "<script>jQuery('.kk_spinner_wrapper').fadeIn();</script>";
 
     if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] === UPLOAD_ERR_OK) {
 
@@ -101,7 +101,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                 // Validate page URL
-                if(!filter_var($URLItem, FILTER_VALIDATE_URL)) return;
+                if(!filter_var($URLItem ?? '', FILTER_VALIDATE_URL) && $URLItem !== "") continue;
+
                 
                 // Parse the URL
                 $parsedURL = parse_url($URLItem);
@@ -119,15 +120,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
 
                 // Validate prices
+                // TODO prices are integers! Add switch to handle this
                 $pricesItem = (!empty($pricesItem)) ? $pricesItem : "Nie podano";
 
 
                 // Validate Longitude and Latitude and build map URL
                 // TODO Save image with URL $signedUrl to media library to do not use API that often :)
-                // TODO Restrict this API key later
+                // TODO Restrict this API key later if plugin will be move somewhere else than localhost
                 if(!is_numeric($longitudeItem) || !is_numeric($latitudeItem)) {
                     debug_log('Invalid longitude or latitude in one of the rows.');
-                    return;
+                    continue;
                 }else{
                     $mapUrl = "https://maps.googleapis.com/maps/api/staticmap?center=$latitudeItem,$longitudeItem&zoom=18&size=1200x600&scale=2&markers=size:mid|color:red|$latitudeItem,$longitudeItem&key=" . MAPS_STATIC_API_KEY;
                     // debug_log($mapUrl);
@@ -138,17 +140,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pretty_place_name = $nazwaItem . ' ' . $addressArray['city']['city_name'] . ', '. $addressArray['street'];
 
                 if(!get_page_by_path(sanitize_title($pretty_place_name), OBJECT, 'post')){
-
-                    // MAKE OPENAI API CALL
-                    // $prompt = 'Bazując na podanych danych, przygotuj opis na stronę internetową w HTML (bez tagów doctype,head). Opis powinien być podzielony na konkretne działy:
-                    // - Informacje ogólne (Nazwa firmy w nagłówku h2 (nazwa firmy), typ firmy, opis firmy)
-                    // - Wybrane opinie klientów (wypisz w elementach div poszczególne opinie i nie wyświetlaj pustych opinii)
-                    // - Podsumowanie opinii (podsumuj opinie od klientów i bazując na nich wykonaj podsumowanie firmy). W razie braku podanych informacji w danym dziale, zostaw informację "Brak danych".
-                    // ';
-        
-                    // TODO move generateContentWithOpenAI to batch actions to generate content after posts are created
-                    // Generate post content with OpenAI
-                    // $generated_post_content = generateContentWithOpenAI($prompt, 2000);
 
                     // Declare new variable for post content or clear existing one
                     $post_content = "";
@@ -191,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     // Insert the post and get the post ID
                     $post_id = wp_insert_post( $post_data );
-                    echo "<script>jQuery('.kk_spinner_wrapper').fadeOut();</script>";
+                    // echo "<script>jQuery('.kk_spinner_wrapper').fadeOut();</script>";
                     if( $post_id ){
 
                         debug_log("Post was created with the ID= $post_id");

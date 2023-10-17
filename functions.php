@@ -215,7 +215,7 @@ function signUrl($url, $secret){
 
 function generateContentWithOpenAI($prompt, $maxTokens) {
     debug_log("~Begin content generation~");
-    echo "<script>jQuery('.kk_spinner_wrapper').fadeIn().css('display', 'flex');</script>";
+    // echo "<script>jQuery('.kk_spinner_wrapper').fadeIn().css('display', 'flex');</script>";
 
     $client = new Client(['base_uri' => 'https://api.openai.com/']);
 
