@@ -65,7 +65,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     "review_5" => str_replace(['"', "'"], '', $row[array_search( 'Opinia 5', $header)]),
                     "review_6" => str_replace(['"', "'"], '', $row[array_search( 'Opinia 6', $header)])
                 );
-                $typeItem = $row[array_search('Typ', $header)];
+                $typeItem = (isset($row[array_search('Typ', $header)]) || !empty($row[array_search('Typ', $header)])) ? trim($row[array_search('Typ', $header)]) : '';
+                $typeItemParts = explode(',', $typeItem);
+                
                 $pricesItem = $row[array_search('Wysokość cen', $header)];
 
                 
@@ -88,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Split city details
                 $secondFromLast = isset($addressParts[count($addressParts) - 2]) ? trim($addressParts[count($addressParts) - 2]) : '';
                 $cityParts = explode(' ', $secondFromLast);
-                debug_log("Current cityParts = $secondFromLast");
+                // debug_log("Current cityParts (post code and city name) = $secondFromLast");
 
                 $addressArray['city']['post_code'] = isset($cityParts[0]) ? trim($cityParts[0]) : '';
                 $addressArray['city']['city_name'] = isset($cityParts[1]) ? trim($cityParts[1]) : '';
@@ -241,23 +243,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $pricesItem = "Nie podano";
                 }
 
-
-                // Validate Longitude and Latitude and build map URL
-                // TODO Save image with URL $signedUrl to media library to do not use API that often :)
-                if(!is_numeric($longitudeItem) || !is_numeric($latitudeItem)) {
-                    debug_log('Invalid longitude or latitude in one of the rows.');
-                    continue;
-                }else{
-                    $mapUrl = "https://maps.googleapis.com/maps/api/staticmap?center=$latitudeItem,$longitudeItem&zoom=18&size=1200x600&scale=2&markers=size:mid|color:red|$latitudeItem,$longitudeItem&key=" . MAPS_STATIC_API_KEY;
-                    // debug_log($mapUrl);
-                    $signedUrl = signUrl($mapUrl, MAPS_STATIC_API_SECRET);
-                    $signedUrl = download_image_to_media_library($signedUrl);
-                }
-
                 // Create pretty place name
                 $pretty_place_name = $nazwaItem . ' ' . $addressArray['city']['city_name'] . ', '. $addressArray['street'];
 
+                // Validate Longitude and Latitude and build map URL
+                if(!is_numeric($longitudeItem) || !is_numeric($latitudeItem)) {
+                    debug_log('Invalid longitude or latitude in one of the rows.');
+                    continue;
+                }
+
                 if(!get_page_by_path(sanitize_title($pretty_place_name), OBJECT, 'post')){
+
+                    // Get Google Static Map Image
+                    // TODO Save image with URL $signedUrl to media library to do not use API that often :)
+                    $mapUrl = "https://maps.googleapis.com/maps/api/staticmap?center=$latitudeItem,$longitudeItem&zoom=18&size=1200x600&scale=2&markers=size:mid|color:red|$latitudeItem,$longitudeItem&key=" . MAPS_STATIC_API_KEY;
+                    // debug_log($mapUrl);
+                    $signedUrl = signUrl($mapUrl, MAPS_STATIC_API_SECRET);
+                    // $signedUrl = download_image_to_media_library($signedUrl, $pretty_place_name);
 
                     // Declare new variable for post content or clear existing one
                     $post_content = "";

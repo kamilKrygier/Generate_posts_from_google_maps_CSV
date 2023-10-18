@@ -288,44 +288,78 @@ function add_ai_generated_column_content($column_name, $post_id) {
 }
 add_action('manage_posts_custom_column', 'add_ai_generated_column_content', 10, 2);
 
-function download_image_to_media_library($path){
-    // Ensure the required functions are available
-    require_once(ABSPATH . 'wp-admin/includes/image.php');
-    require_once(ABSPATH . 'wp-admin/includes/file.php');
-    require_once(ABSPATH . 'wp-admin/includes/media.php');
+// function download_image_to_media_library($signedUrl, $pretty_place_name){
+//     debug_log("IMAGE DOWNLOAD START");
 
-    // Download the image from the source URL
-    $temp_file = download_url($signedUrl);
+//     // Ensure the required functions are available
+//     require_once(ABSPATH . 'wp-admin/includes/image.php');
+//     require_once(ABSPATH . 'wp-admin/includes/file.php');
+//     require_once(ABSPATH . 'wp-admin/includes/media.php');
 
-    // Check if there was an error
-    if (is_wp_error($temp_file)) {
-        throw new Exception($temp_file->get_error_message());
-    }
+//     $pretty_place_name = sanitize_title( $pretty_place_name );
 
-    // Set up the array of arguments for wp_insert_attachment()
-    $file_args = array(
-        'name'     => basename($signedUrl),
-        'type'     => wp_check_filetype(basename($signedUrl), null)['type'],
-        'file'     => $temp_file,
-        'post_title'     => basename($signedUrl),
-        'post_content'   => '',
-        'post_status'    => 'inherit'
-    );
+//     debug_log("PLACE NAME: $pretty_place_name, IMAGE URL: $signedUrl");
 
-    // Insert the attachment
-    $attachment_id = wp_insert_attachment($file_args, $temp_file);
+//     // Extract the file extension from the original URL
+//     // This not works with those google images
+//     // $file_extension = pathinfo($signedUrl, PATHINFO_EXTENSION);
 
-    // Check for an error
-    if (is_wp_error($attachment_id)) {
-        @unlink($temp_file);
-        throw new Exception($attachment_id->get_error_message());
-    }
+//     // Use the WordPress function to get a unique filename
+//     $base_upload_dir  = wp_upload_dir()['path'];
+//     $unique_filename = wp_unique_filename($base_upload_dir, $pretty_place_name . '.png');
+//     $wp_upload_dir = $base_upload_dir . '/' . $unique_filename;
 
-    // Generate attachment metadata
-    $attachment_metadata = wp_generate_attachment_metadata($attachment_id, $temp_file);
-    wp_update_attachment_metadata($attachment_id, $attachment_metadata);
+//     // Download the image from the source URL
+//     $temp_file = wp_remote_get($signedUrl, array(
+//         'timeout' => 30,
+//         'stream' => true, // This will download the file directly instead of loading it into memory.
+//         'filename' => $wp_upload_dir,
+//         'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+//     ));
 
-    // return URL of the uploaded image
-    return wp_get_attachment_url($attachment_id);
+//     if (is_wp_error($temp_file)) {
+//         debug_log("WP Remote Get error: " . $temp_file->get_error_message());
+//         return;
+//     }
 
-}
+//     // Detect image type
+//     // $image_info = getimagesize($temp_path);
+//     // if(!$image_info) {
+//     //     debug_log("Failed to detect image type.");
+//     //     @unlink($temp_path);
+//     //     return;
+//     // }
+
+//     // $extension = image_type_to_extension($image_info[2], false);
+//     // $wp_upload_dir = $base_upload_dir . '/' . $pretty_place_name . '.' . $extension;
+//     // rename($temp_path, $wp_upload_dir);
+
+//     // Set up the array of arguments for wp_insert_attachment()
+//     $file_args = array(
+//         'name'     => basename($wp_upload_dir),
+//         'type'     => wp_check_filetype($wp_upload_dir, null)['type'],
+//         'file'     => $wp_upload_dir,
+//         'post_title'     => basename($wp_upload_dir),
+//         'post_content'   => '',
+//         'post_status'    => 'inherit'
+//     );
+
+//     // Insert the attachment
+//     $attachment_id = wp_insert_attachment($file_args, $wp_upload_dir);
+
+//     // Check for an error
+//     if (is_wp_error($attachment_id)) {
+//         @unlink($temp_file);
+//         throw new Exception($attachment_id->get_error_message());
+//     }
+
+//     // Generate attachment metadata
+//     $attachment_metadata = wp_generate_attachment_metadata($attachment_id, $wp_upload_dir);
+//     wp_update_attachment_metadata($attachment_id, $attachment_metadata);
+
+//     debug_log("IMAGE DOWNLOAD END");
+
+//     // return URL of the uploaded image
+//     return wp_get_attachment_url($attachment_id);
+
+// }

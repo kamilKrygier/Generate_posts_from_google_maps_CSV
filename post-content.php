@@ -39,6 +39,7 @@
     $post_content .= '<div style="height:50px" aria-hidden="true" class="wp-block-spacer"></div>';
 
     // GOOGLE PLACES REVIEWS (6)
+    if(!empty($reviewItems)){
         $post_content .= '<div class="wp-block-group is-content-justification-center is-nowrap is-layout-flex wp-container-4 wp-block-group-is-layout-flex">';
             $post_content .= '<div class="ctp_review_wrapper">';
             foreach($reviewItems as $reviewItem){
@@ -46,6 +47,7 @@
             }
             $post_content .= '</div>';
         $post_content .= '</div>';
+    }
     // -----------------------------------------
 
     $post_content .= '<div style="height:100px" aria-hidden="true" class="wp-block-spacer"></div>';
