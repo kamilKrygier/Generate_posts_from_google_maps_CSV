@@ -14,6 +14,16 @@
     exit; // Exit if accessed directly
 }
 
+// Google Maps Static API KEYS
+define('MAPS_STATIC_API_KEY', 'AIzaSyCjOm1OIM9t5LDAlqlWbGETHxN35WBkA2M');
+define('MAPS_STATIC_API_SECRET', 'XotNf-HvPZlBu-kzWGuESKGRUX4=');
+
+// Google Places API KEY
+define('GOOGLE_PLACES_API_KEY', "AIzaSyDxCIJn5aAvivcCFFQQ96H9ZlJ5uWuvZRs");
+
+// OpenAI API KEY
+define('OPENAI_API_KEY', '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');
+
 require 'vendor/autoload.php';
 use GuzzleHttp\Client;
 use Spatie\Browsershot\Browsershot;
@@ -287,6 +297,62 @@ function add_ai_generated_column_content($column_name, $post_id) {
     }
 }
 add_action('manage_posts_custom_column', 'add_ai_generated_column_content', 10, 2);
+
+
+function custom_cron_job_recurrence($schedules){
+    $schedules['every_hour'] = array(
+        'interval'  => 3600,
+        'display'   => 'Every Hour'
+    );
+    return $schedules;
+}
+add_filter('cron_schedules', 'custom_cron_job_recurrence');
+
+if (!wp_next_scheduled('run_ai_generation_for_posts')) {
+    wp_schedule_event(time(), 'every_hour', 'run_ai_generation_for_posts');
+}
+
+function handle_ai_generation_for_posts() {
+    // Query for posts that don't have the ai_genrated_content meta
+    $args = array(
+        'post_type' => 'post',
+        'posts_per_page' => 10,
+        'meta_query' => array(
+            array(
+                'key' => 'ai_genrated_content',
+                'compare' => 'NOT EXISTS'
+            ),
+        )
+    );
+
+    $posts = get_posts($args);
+
+    foreach ($posts as $post) {
+        $post_id = $post->ID;
+        $post_content = $post->post_content;
+
+        $prompt = "Podane dane: $post_content
+                        
+            Bazując na podanych danych, przygotuj opis na stronę internetową (pisz w trzeciej osobie liczby pojedynczej języka polskiego) w HTML (bez tagów doctype,head). Opis powinien być podzielony na konkretne działy (nagłówki h2):
+            - Informacje ogólne (Napisz 100 słów opisu o firmie, w którym zawrzesz informacje o ewentualnym asortymencie, obsłudze, lokalizacji, itd.),
+            - Podsumowanie opinii (podsumuj opinie od klientów i bazując na nich wykonaj podsumowanie firmy, czyli napisz parę słów o tym, o czym ludzie mówią w tych opiniach),
+            - Lokalizacja (Opowiedz więcej o okolicy w pobliżu podanego adresu firmy),
+            - Kontakt (Zachęć do kontaktu z firmą poprzez numer telefonu (jeśli podano), stronę internetową (jeśli podano) oraz osobiste odwiedziny pod podanym adresem (podaj adres)).
+            ";
+
+        $generated_post_content = generateContentWithOpenAI($prompt, 2200);
+
+        if (!empty($generated_post_content)) {
+            $post_content .= $generated_post_content;
+            $post_updated = wp_update_post(array('ID' => $post_id, 'post_content' => $post_content));
+
+            if (!is_wp_error($post_updated)) {
+                add_post_meta($post_id, 'ai_genrated_content', true);
+            }
+        }
+    }
+}
+add_action('run_ai_generation_for_posts', 'handle_ai_generation_for_posts');
 
 // function download_image_to_media_library($signedUrl, $pretty_place_name){
 //     debug_log("IMAGE DOWNLOAD START");

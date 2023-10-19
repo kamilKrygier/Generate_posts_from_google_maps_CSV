@@ -255,7 +255,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if(!get_page_by_path(sanitize_title($pretty_place_name), OBJECT, 'post')){
 
                     // Get Google Static Map Image
-                    // TODO Save image with URL $signedUrl to media library to do not use API that often :)
                     $mapUrl = "https://maps.googleapis.com/maps/api/staticmap?center=$latitudeItem,$longitudeItem&zoom=18&size=1200x600&scale=2&markers=size:mid|color:red|$latitudeItem,$longitudeItem&key=" . MAPS_STATIC_API_KEY;
                     // debug_log($mapUrl);
                     $signedUrl = signUrl($mapUrl, MAPS_STATIC_API_SECRET);
