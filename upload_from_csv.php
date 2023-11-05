@@ -256,9 +256,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     // Get Google Static Map Image
                     $mapUrl = "https://maps.googleapis.com/maps/api/staticmap?center=$latitudeItem,$longitudeItem&zoom=18&size=1200x600&scale=2&markers=size:mid|color:red|$latitudeItem,$longitudeItem&key=" . MAPS_STATIC_API_KEY;
-                    // debug_log($mapUrl);
+                    
                     $signedUrl = signUrl($mapUrl, MAPS_STATIC_API_SECRET);
-                    // $signedUrl = download_image_to_media_library($signedUrl, $pretty_place_name);
 
                     // Declare new variable for post content or clear existing one
                     $post_content = "";
@@ -295,7 +294,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     // Insert the post and get the post ID
                     $post_id = wp_insert_post( $post_data );
-                    // echo "<script>jQuery('.kk_spinner_wrapper').fadeOut();</script>";
                     if( $post_id ){
 
                         debug_log("Post was created with the ID= $post_id");
