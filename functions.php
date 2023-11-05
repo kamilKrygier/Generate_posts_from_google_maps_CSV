@@ -25,6 +25,7 @@ define('GOOGLE_PLACES_API_KEY', "AIzaSyDxCIJn5aAvivcCFFQQ96H9ZlJ5uWuvZRs");
 define('OPENAI_API_KEY', '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');
 
 require 'vendor/autoload.php';
+// Don't forget to install GuzzleHttp
 use GuzzleHttp\Client;
 
 function ctp_admin_styles_enqueue() {
