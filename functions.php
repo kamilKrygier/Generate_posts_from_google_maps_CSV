@@ -1,11 +1,11 @@
 <?php
 /**
- * Plugin Name: SIXSILVER CSV to Posts plugin
+ * Plugin Name: CSV to Posts plugin
  * Description: Import posts from a CSV file.
  * Version: 1.0
  * Author: Kamil Krygier
  * Author URI: https://www.linkedin.com/in/kamil-krygier-132940166
- * Text Domain: sixsilver-csv-to-posts
+ * Text Domain: csv-to-posts
  * Requires at least: 6.2
  * Requires PHP: 8.1
  */
@@ -26,7 +26,6 @@ define('OPENAI_API_KEY', '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');
 
 require 'vendor/autoload.php';
 use GuzzleHttp\Client;
-use Spatie\Browsershot\Browsershot;
 
 function ctp_admin_styles_enqueue() {
 	wp_enqueue_style( 'ctp_admin_style', plugin_dir_url(__FILE__) . "styles/dist/ctp_admin_style.css");
@@ -38,7 +37,7 @@ function ctp_styles_enqueue() {
 if(is_admin()) add_action('admin_enqueue_scripts', 'ctp_admin_styles_enqueue');
     else add_action('wp_enqueue_scripts', 'ctp_styles_enqueue');
 
-// TODO Remember to add restrictions to Google Maps STATIC/PLACES API at console.cloud.google.com after moving it out of localhost
+// Remember to add restrictions to Google Maps STATIC/PLACES API at console.cloud.google.com after moving it out of localhost
 
 
 
@@ -54,7 +53,7 @@ function debug_log($message) {
         }
         
         $current = file_get_contents($logFile);
-        $current .= $message . "\n";  // Append received message to file content
+        $current .= $message . "\n";
         file_put_contents($logFile, $current);        
     };
 }
@@ -97,7 +96,7 @@ function generateContentWithOpenAIBatchActionCallback() {
     if ($request_action === 'generate_content_with_openai') {
         $post_ids = (isset($_REQUEST['post']) && is_array($_REQUEST['post']) && array_map('intval', $_REQUEST['post'])) ? $_REQUEST['post'] : array();
         
-        // Split the post IDs into batches of ...
+        // Split the post IDs into batches of 5
         $batches = array_chunk($post_ids, 5);
 
         foreach ($batches as $batch){
@@ -158,7 +157,6 @@ function display_batch_process_notice() {
             <p><?php _e('Batch process completed successfully!', 'your-text-domain'); ?></p>
         </div>
         <?php
-        // Don't forget to delete the transient so that the message isn't shown on subsequent page loads
         delete_transient('batch_process_complete');
     }
 }
@@ -187,7 +185,7 @@ function google_places_scrapper(){
 
     // If form not submitted, show the form
     echo '<h2>Map Scrapper</h2>';
-    echo '<form method="post" action="">'; // Post to the same page
+    echo '<form method="post" action="">'; 
     echo '<label for="place_category">Choose a category:</label>';
     echo '<select name="place_category" id="place_category">';
     foreach ($place_category as $category) {
@@ -238,7 +236,6 @@ function signUrl($url, $secret){
 
 function generateContentWithOpenAI($prompt, $maxTokens) {
     debug_log("~Begin content generation~");
-    // echo "<script>jQuery('.kk_spinner_wrapper').fadeIn().css('display', 'flex');</script>";
 
     $client = new Client(['base_uri' => 'https://api.openai.com/']);
 
@@ -330,7 +327,8 @@ function handle_ai_generation_for_posts() {
     foreach ($posts as $post) {
         $post_id = $post->ID;
         $post_content = $post->post_content;
-
+	    
+	// Currently supporting only one prompt dormat and language
         $prompt = "Podane dane: $post_content
                         
             Bazując na podanych danych, przygotuj opis na stronę internetową (pisz w trzeciej osobie liczby pojedynczej języka polskiego) w HTML (bez tagów doctype,head). Opis powinien być podzielony na konkretne działy (nagłówki h2):
@@ -353,79 +351,3 @@ function handle_ai_generation_for_posts() {
     }
 }
 add_action('run_ai_generation_for_posts', 'handle_ai_generation_for_posts');
-
-// function download_image_to_media_library($signedUrl, $pretty_place_name){
-//     debug_log("IMAGE DOWNLOAD START");
-
-//     // Ensure the required functions are available
-//     require_once(ABSPATH . 'wp-admin/includes/image.php');
-//     require_once(ABSPATH . 'wp-admin/includes/file.php');
-//     require_once(ABSPATH . 'wp-admin/includes/media.php');
-
-//     $pretty_place_name = sanitize_title( $pretty_place_name );
-
-//     debug_log("PLACE NAME: $pretty_place_name, IMAGE URL: $signedUrl");
-
-//     // Extract the file extension from the original URL
-//     // This not works with those google images
-//     // $file_extension = pathinfo($signedUrl, PATHINFO_EXTENSION);
-
-//     // Use the WordPress function to get a unique filename
-//     $base_upload_dir  = wp_upload_dir()['path'];
-//     $unique_filename = wp_unique_filename($base_upload_dir, $pretty_place_name . '.png');
-//     $wp_upload_dir = $base_upload_dir . '/' . $unique_filename;
-
-//     // Download the image from the source URL
-//     $temp_file = wp_remote_get($signedUrl, array(
-//         'timeout' => 30,
-//         'stream' => true, // This will download the file directly instead of loading it into memory.
-//         'filename' => $wp_upload_dir,
-//         'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
-//     ));
-
-//     if (is_wp_error($temp_file)) {
-//         debug_log("WP Remote Get error: " . $temp_file->get_error_message());
-//         return;
-//     }
-
-//     // Detect image type
-//     // $image_info = getimagesize($temp_path);
-//     // if(!$image_info) {
-//     //     debug_log("Failed to detect image type.");
-//     //     @unlink($temp_path);
-//     //     return;
-//     // }
-
-//     // $extension = image_type_to_extension($image_info[2], false);
-//     // $wp_upload_dir = $base_upload_dir . '/' . $pretty_place_name . '.' . $extension;
-//     // rename($temp_path, $wp_upload_dir);
-
-//     // Set up the array of arguments for wp_insert_attachment()
-//     $file_args = array(
-//         'name'     => basename($wp_upload_dir),
-//         'type'     => wp_check_filetype($wp_upload_dir, null)['type'],
-//         'file'     => $wp_upload_dir,
-//         'post_title'     => basename($wp_upload_dir),
-//         'post_content'   => '',
-//         'post_status'    => 'inherit'
-//     );
-
-//     // Insert the attachment
-//     $attachment_id = wp_insert_attachment($file_args, $wp_upload_dir);
-
-//     // Check for an error
-//     if (is_wp_error($attachment_id)) {
-//         @unlink($temp_file);
-//         throw new Exception($attachment_id->get_error_message());
-//     }
-
-//     // Generate attachment metadata
-//     $attachment_metadata = wp_generate_attachment_metadata($attachment_id, $wp_upload_dir);
-//     wp_update_attachment_metadata($attachment_id, $attachment_metadata);
-
-//     debug_log("IMAGE DOWNLOAD END");
-
-//     // return URL of the uploaded image
-//     return wp_get_attachment_url($attachment_id);
-
-// }
