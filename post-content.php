@@ -8,9 +8,7 @@
             $post_content .= '<ul>';
             
             // INFO LIST
-                // $post_content .= '<li>{{HERE PLACE "Email"}}</li>';
                 $post_content .= (!empty($phone)) ? "<li><span>Telefon: <a href='tel:$phone'>$phone</a></span></li>" : "";
-                // $post_content .= (!empty($mail)) ? "<li><span>Mail: <a href='mailto:$mail'>$mail</a></span></li>" : "";
                 $post_content .= (!empty($parsedURL)) ? "<li><span>Strona internetowa: <a href='$parsedURL'>$parsedURL</a></span></li>" : "";
                 $post_content .= (!empty($addressItem)) ? "<li><span>Adres: $addressItem</span></li>" : "";
                 $post_content .= (!empty($pretty_opening_hours)) ? "<li><span>Godziny otwarcia: $pretty_opening_hours</span></li>" : "";
@@ -19,16 +17,6 @@
                 // -----------------------------------------
             $post_content .= '</ul>';
         $post_content .= '</div>';
-
-        // WEBSITE SCREENSHOT
-        if (isset($page_screenshot) && $page_screenshot){
-            $post_content .= '<div class="wp-block-column is-vertically-aligned-center is-layout-flow wp-block-column-is-layout-flow">';
-
-                $post_content .= '<figure class="wp-block-image size-large"><img src="' . $page_screenshot . '"></figure>';
-                
-            $post_content .= '</div>';
-        }
-        // -----------------------------------------
 
     $post_content .= '</div>';
 
