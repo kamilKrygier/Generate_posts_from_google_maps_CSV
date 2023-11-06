@@ -15,14 +15,14 @@
 }
 
 // Google Maps Static API KEYS
-define('MAPS_STATIC_API_KEY', 'AIzaSyCjOm1OIM9t5LDAlqlWbGETHxN35WBkA2M');
-define('MAPS_STATIC_API_SECRET', 'XotNf-HvPZlBu-kzWGuESKGRUX4=');
+define('MAPS_STATIC_API_KEY', 'Your maps static api key');
+define('MAPS_STATIC_API_SECRET', 'Your maps static api secret');
 
 // Google Places API KEY
-define('GOOGLE_PLACES_API_KEY', "AIzaSyDxCIJn5aAvivcCFFQQ96H9ZlJ5uWuvZRs");
+define('GOOGLE_PLACES_API_KEY', "Your google places api key");
 
 // OpenAI API KEY
-define('OPENAI_API_KEY', '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');
+define('OPENAI_API_KEY', 'Your OpenAI API key');
 
 require 'vendor/autoload.php';
 // Don't forget to install GuzzleHttp
