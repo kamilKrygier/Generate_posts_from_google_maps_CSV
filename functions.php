@@ -18,8 +18,6 @@ require 'vendor/autoload.php';
 require 'includes/class-handle-api-keys.php';
 require 'includes/class-utils.php';
 
-$Utils = new Utils();
-
 // Don't forget to install GuzzleHttp
 use GuzzleHttp\Client;
 
@@ -77,6 +75,7 @@ add_filter('bulk_actions-edit-post', 'generateContentWithOpenAIBatchAction');
 
 // Handle the Generate content with openai
 function generateContentWithOpenAIBatchActionCallback() {
+    $Utils = new Utils();
     $request_action = sanitize_text_field($_REQUEST['action']);
     if ($request_action === 'generate_content_with_openai') {
         $post_ids = (isset($_REQUEST['post']) && is_array($_REQUEST['post']) && array_map('intval', $_REQUEST['post'])) ? $_REQUEST['post'] : array();
@@ -204,32 +203,10 @@ function settings_page(){
     echo "</form>";
 }
 
-
-function signUrl($url, $secret){
-
-    // parse the URL
-    $parsedUrl = parse_url($url);
-    // construct the URL to be signed
-    $urlToSign = $parsedUrl['path'] . "?" . $parsedUrl['query'];
-    
-    // decode the private key into its binary format
-    $decodedKey = str_replace(['-', '_'], ['+', '/'], $secret);
-    $decodedKey = base64_decode($decodedKey);
-    
-    // create a signature using the private key and the URL-encoded string using HMAC SHA1
-    $signature = hash_hmac('sha1', $urlToSign, $decodedKey, true);
-    
-    // encode the signature into base64 for use within a URL
-    $encodedSignature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
-    
-    return $url . "&signature=" . $encodedSignature;
-
-}
-
-
 function generateContentWithOpenAI($prompt, $maxTokens) {
 
     $handleAPIKeys = new Handle_API_keys();
+    $Utils = new Utils();
 
     $Utils->debug_log("~Begin content generation~");
 
@@ -352,10 +329,11 @@ add_action('run_ai_generation_for_posts', 'handle_ai_generation_for_posts');
 function ctp_map_image_shortcode($atts) {
 
     $handleAPIKeys = new Handle_API_keys();
+    $Utils = new Utils();
 
     // TODO check if shortcode is converted to image at the frontend
-    $api_key = $handleAPIKeys->get_API_key('GOOGLE_STATIC_MAPS_API_KEY');
-    $api_secret = $handleAPIKeys->get_API_key('GOOGLE_MAPS_STATIC_API_SECRET');
+    $api_key = $handleAPIKeys->get_API_key('MAPS_STATIC_API_KEY');
+    $api_secret = $handleAPIKeys->get_API_key('MAPS_STATIC_API_SECRET');
 
     $atts = shortcode_atts(
         array(
@@ -365,13 +343,16 @@ function ctp_map_image_shortcode($atts) {
         $atts
     );
     
-    if( empty($api_key) || empty($api_secret) ) return;
+    // TODO Add validation if API key is not valid than return;
+    // if( empty($api_key) || empty($api_secret) ) return;
+
+    // $atts['center'] = str_replace(';', '|', $atts['center']);
 
     // Get Google Static Map Image
     $map_url = "https://maps.googleapis.com/maps/api/staticmap?center={$atts['center']}&zoom=18&size=1200x600&scale=2&markers=size:mid|color:red|{$atts['center']}&key={$api_key}";
-    $signedUrl = signUrl($map_url, $api_secret);
+    $signedUrl = $Utils->signUrl($map_url, $api_secret);
 
     return "<img src='{$signedUrl}' alt='{$atts['alt']}'>";
 
 }
-add_shortcode('google_static_map', 'google_static_map_shortcode');
+add_shortcode('ctp_map_image', 'ctp_map_image_shortcode');

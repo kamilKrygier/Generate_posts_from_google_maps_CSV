@@ -44,6 +44,27 @@ class Utils{
 
     }
 
+    public function signUrl($url, $secret){
+
+        // parse the URL
+        $parsedUrl = parse_url($url);
+        // construct the URL to be signed
+        $urlToSign = $parsedUrl['path'] . "?" . $parsedUrl['query'];
+        
+        // decode the private key into its binary format
+        $decodedKey = str_replace(['-', '_'], ['+', '/'], $secret);
+        $decodedKey = base64_decode($decodedKey);
+        
+        // create a signature using the private key and the URL-encoded string using HMAC SHA1
+        $signature = hash_hmac('sha1', $urlToSign, $decodedKey, true);
+        
+        // encode the signature into base64 for use within a URL
+        $encodedSignature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
+        
+        return $url . "&signature=" . $encodedSignature;
+    
+    }
+
 }
 
 ?>

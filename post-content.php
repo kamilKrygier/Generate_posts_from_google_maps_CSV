@@ -48,7 +48,7 @@
 
         $post_content .= "<a href='https://www.google.com/maps/search/$latitudeItem,$longitudeItem' target='_blank'>";
 
-        $post_content .= "[ctp_map_image center='$latitudeItem|$longitudeItem' alt='$pretty_place_name']";
+        $post_content .= '[ctp_map_image center="' . $latitudeItem . ',' . $longitudeItem . '" alt="' . $pretty_place_name . '"]';
 
         $post_content .= "</a><br><div class='wp-block-buttons is-layout-flex wp-block-buttons-is-layout-flex'><div class='wp-block-button'><a class='wp-block-button__link wp-element-button' href='https://www.google.com/maps/search/$latitudeItem,$longitudeItem'>Jak dojadę ?</a></div></div>";
     // -----------------------------------------
