@@ -1,5 +1,7 @@
 <?php
 
+// TODO Check if external links has nofollow
+
     // BUSINESS/COMPANY INFO
     $post_content .= '<div class="wp-block-columns are-vertically-aligned-center is-layout-flex wp-container-3 wp-block-columns-is-layout-flex">';
 
@@ -43,6 +45,10 @@
     $post_content .= '<h2 class="wp-block-heading">Jak dojechać?</h2>';
 
     // GOOGLE STATIC MAPS API IMAGE
-        $post_content .= "<a href='https://www.google.com/maps/search/$latitudeItem,$longitudeItem' target='_blank'><img class='ctp_map_image' src='$signedUrl' alt='$pretty_place_name'></a><br>";
-        $post_content .= "<div class='wp-block-buttons is-layout-flex wp-block-buttons-is-layout-flex'><div class='wp-block-button'><a class='wp-block-button__link wp-element-button' href='https://www.google.com/maps/search/$latitudeItem,$longitudeItem'>Jak dojadę ?</a></div></div>";
+
+        $post_content .= "<a href='https://www.google.com/maps/search/$latitudeItem,$longitudeItem' target='_blank'>";
+
+        $post_content .= "[ctp_map_image center='$latitudeItem|$longitudeItem' alt='$pretty_place_name']";
+
+        $post_content .= "</a><br><div class='wp-block-buttons is-layout-flex wp-block-buttons-is-layout-flex'><div class='wp-block-button'><a class='wp-block-button__link wp-element-button' href='https://www.google.com/maps/search/$latitudeItem,$longitudeItem'>Jak dojadę ?</a></div></div>";
     // -----------------------------------------
