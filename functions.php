@@ -17,6 +17,7 @@
 require 'vendor/autoload.php';
 require 'includes/class-handle-api-keys.php';
 require 'includes/class-utils.php';
+require_once 'includes/admin-notices.php';
 
 // Don't forget to install GuzzleHttp
 use GuzzleHttp\Client;
@@ -48,7 +49,7 @@ function csv_to_posts_menu(){
         'Google Places Scrapper',
         'Google Places Scrapper',
         'manage_options',
-        'google-places-scrapper',
+        'ctp-google-places-scrapper',
         'google_places_scrapper_page'
     );
 
@@ -57,7 +58,7 @@ function csv_to_posts_menu(){
         'Settings',
         'Settings',
         'manage_options',
-        'settings',
+        'ctp-settings',
         'settings_page'
     );
 
@@ -75,7 +76,6 @@ add_filter('bulk_actions-edit-post', 'generateContentWithOpenAIBatchAction');
 
 // Handle the Generate content with openai
 function generateContentWithOpenAIBatchActionCallback() {
-    $Utils = new Utils();
     $request_action = sanitize_text_field($_REQUEST['action']);
     if ($request_action === 'generate_content_with_openai') {
         $post_ids = (isset($_REQUEST['post']) && is_array($_REQUEST['post']) && array_map('intval', $_REQUEST['post'])) ? $_REQUEST['post'] : array();
@@ -85,10 +85,10 @@ function generateContentWithOpenAIBatchActionCallback() {
 
         foreach ($batches as $batch){
             
-            $Utils->debug_log("BATCH STARTED - UPDATE POST WITH AI GENERATED CONTENT");
+            Utils::debug_log("BATCH STARTED - UPDATE POST WITH AI GENERATED CONTENT");
             foreach ($batch as $post_id) {
                 if(!get_post_meta($post_id, 'ai_genrated_content', true)){
-                    $Utils->debug_log("Working on post with ID=$post_id");
+                    Utils::debug_log("Working on post with ID=$post_id");
 
                     // Get the post object by post ID
                     $post = get_post($post_id);
@@ -111,13 +111,13 @@ function generateContentWithOpenAIBatchActionCallback() {
                         $generated_post_content = generateContentWithOpenAI($prompt, 2200);
 
                         if(!empty($generated_post_content)){
-                            $Utils->debug_log("AI content has been generated for post with ID=$post_id");
+                            Utils::debug_log("AI content has been generated for post with ID=$post_id");
                             $post_content .= $generated_post_content;
                             $post_updated = wp_update_post(array('ID' => $post_id, 'post_content' => $post_content));
 
-                            if(is_wp_error( $post_updated )) $Utils->debug_log("There was an error while updating post");
+                            if(is_wp_error( $post_updated )) Utils::debug_log("There was an error while updating post");
                             else{
-                                $Utils->debug_log("Post with ID=$post_id has been updated");
+                                Utils::debug_log("Post with ID=$post_id has been updated");
 
                                 // If AI generated content was added to post, than add info to post that it already contains AI generated content
                                 add_post_meta( $post_id, 'ai_genrated_content', true);
@@ -125,9 +125,9 @@ function generateContentWithOpenAIBatchActionCallback() {
                             
                         }
                     }
-                } else $Utils->debug_log("Post with ID=$post_id, already has AI generated content!");
+                } else Utils::debug_log("Post with ID=$post_id, already has AI generated content!");
             }
-            $Utils->debug_log("BATCH ENDED");
+            Utils::debug_log("BATCH ENDED");
             set_transient('batch_process_generate_articles_content_complete', true, 5 * MINUTE_IN_SECONDS);
         }
     }
@@ -165,6 +165,7 @@ function csv_to_posts_upload_page(){
 
 // Scrape Google Places page
 function google_places_scrapper_page(){
+
     include_once('maps_scrape.php');
 
     // If form not submitted, show the form
@@ -183,41 +184,49 @@ function google_places_scrapper_page(){
 
 // Settings page
 function settings_page(){
-    $handleAPIKeys = new Handle_API_keys();
+    $ctp_placeholder_image = '';
+    $handleApiKeys = new Handle_API_keys();
 
-    // TODO Add input with placeholder image URL
+    // TODO move below echoes to admin_notices to make it bit more readable :)
     if(isset($_POST['submit'])){
-        if(!empty($_POST['MAPS_STATIC_API_KEY'])) echo $handleAPIKeys->change_API_key('MAPS_STATIC_API_KEY', $_POST['MAPS_STATIC_API_KEY']);
-        if(!empty($_POST['MAPS_STATIC_API_SECRET'])) echo $handleAPIKeys->change_API_key('MAPS_STATIC_API_SECRET', $_POST['MAPS_STATIC_API_SECRET']);
-        if(!empty($_POST['GOOGLE_PLACES_API_KEY'])) echo $handleAPIKeys->change_API_key('GOOGLE_PLACES_API_KEY', $_POST['GOOGLE_PLACES_API_KEY']);
-        if(!empty($_POST['OPENAI_API_KEY'])) echo $handleAPIKeys->change_API_key('OPENAI_API_KEY', $_POST['OPENAI_API_KEY']);
+        if(!empty($_POST['MAPS_STATIC_API_KEY'])) echo $handleApiKeys->change_API_key('MAPS_STATIC_API_KEY', $_POST['MAPS_STATIC_API_KEY']);
+        if(!empty($_POST['MAPS_STATIC_API_SECRET'])) echo $handleApiKeys->change_API_key('MAPS_STATIC_API_SECRET', $_POST['MAPS_STATIC_API_SECRET']);
+        if(!empty($_POST['GOOGLE_PLACES_API_KEY'])) echo $handleApiKeys->change_API_key('GOOGLE_PLACES_API_KEY', $_POST['GOOGLE_PLACES_API_KEY']);
+        if(!empty($_POST['OPENAI_API_KEY'])) echo $handleApiKeys->change_API_key('OPENAI_API_KEY', $_POST['OPENAI_API_KEY']);
+        // TODO move image upload to other class and validate data before send to DB
+        if(!empty($_POST['ctp_placeholder_image'])){
+            $uploadImage = Utils::uploadPlaceholderImage($_POST['ctp_placeholder_image']) ? 'Success: Image uploaded' : 'Error: image not uploaded';
+            echo $uploadImage;
+        }
     }
+
+    if(!empty(get_option( 'ctp_placeholder_image' ))) $ctp_placeholder_image = get_option( 'ctp_placeholder_image' );
 
     echo "<h2>".__('Settings', 'default')."</h2>";
     echo "<form method='post' action=''>"; 
-    echo "<label>Google MAPS STATIC API KEY \n<input type='text' placeholder='Here place your api key' name='MAPS_STATIC_API_KEY' value='{$handleAPIKeys->get_API_key('MAPS_STATIC_API_KEY')}' required></label><br>";
-    echo "<label>Google MAPS STATIC API SECRET \n<input type='text' placeholder='Here place your api key' name='MAPS_STATIC_API_SECRET' value='{$handleAPIKeys->get_API_key('MAPS_STATIC_API_SECRET')}' required></label><br>";
-    echo "<label>Google PLACES API KEY \n<input type='text' placeholder='Here place your api key' name='GOOGLE_PLACES_API_KEY' value='{$handleAPIKeys->get_API_key('GOOGLE_PLACES_API_KEY')}' required></label><br>";
-    echo "<label>OpenAI API KEY \n<input type='text' placeholder='Here place your api key' name='OPENAI_API_KEY' value='{$handleAPIKeys->get_API_key('OPENAI_API_KEY')}' required></label><br>";
+    echo "<label>Google MAPS STATIC API KEY \n<input type='text' placeholder='Here place your api key' name='MAPS_STATIC_API_KEY'></label><br>";
+    echo "<label>Google MAPS STATIC API SECRET \n<input type='text' placeholder='Here place your api key' name='MAPS_STATIC_API_SECRET'></label><br>";
+    echo "<label>Google PLACES API KEY \n<input type='text' placeholder='Here place your api key' name='GOOGLE_PLACES_API_KEY'></label><br>";
+    echo "<label>OpenAI API KEY \n<input type='text' placeholder='Here place your api key' name='OPENAI_API_KEY'></label><br>";
+    echo "<label>Placeholder image URL: \n<input type='text' placeholder='Here place your placeholder image URL' name='ctp_placeholder_image' value='$ctp_placeholder_image'></label><br>";
     echo "<input type='submit' name='submit' value='".__('Save', 'default')."'>";
     echo "</form>";
 }
 
 function generateContentWithOpenAI($prompt, $maxTokens) {
 
-    $handleAPIKeys = new Handle_API_keys();
-    $Utils = new Utils();
-
-    $Utils->debug_log("~Begin content generation~");
+    Utils::debug_log("~Begin content generation~");
 
     $client = new Client(['base_uri' => 'https://api.openai.com/']);
 
-    $Utils->debug_log("~Current prompt:\n $prompt\n");
+    Utils::debug_log("~Current prompt:\n $prompt\n");
+
+    $OpenAI_API_key = Handle_API_keys::get_API_key('OPENAI_API_KEY') ? Handle_API_keys::get_API_key('OPENAI_API_KEY') : '';
 
     try {
         $response = $client->post('v1/chat/completions', [
             'headers' => [
-                'Authorization' => 'Bearer ' . $handleAPIKeys->get_API_key('OPENAI_API_KEY'),
+                'Authorization' => 'Bearer ' . $OpenAI_API_key,
                 'Content-Type' => 'application/json',
             ],
             'json' => [
@@ -238,11 +247,11 @@ function generateContentWithOpenAI($prompt, $maxTokens) {
 
         $body = $response->getBody();
         $content = json_decode($body, true);
-        $Utils->debug_log("Total tokens used (for current post): " . $content['usage']['total_tokens']);
+        Utils::debug_log("Total tokens used (for current post): " . $content['usage']['total_tokens']);
 
         return $content['choices'][0]['message']['content'] ?? null;
     } catch (GuzzleHttp\Exception\ClientException $e) {
-        $Utils->debug_log($e->getMessage());
+        Utils::debug_log($e->getMessage());
         return null;
     }
 
@@ -328,12 +337,8 @@ add_action('run_ai_generation_for_posts', 'handle_ai_generation_for_posts');
 
 function ctp_map_image_shortcode($atts) {
 
-    $handleAPIKeys = new Handle_API_keys();
-    $Utils = new Utils();
-
-    // TODO check if shortcode is converted to image at the frontend
-    $api_key = $handleAPIKeys->get_API_key('MAPS_STATIC_API_KEY');
-    $api_secret = $handleAPIKeys->get_API_key('MAPS_STATIC_API_SECRET');
+    $api_key = Handle_API_keys::get_API_key('MAPS_STATIC_API_KEY') ? Handle_API_keys::get_API_key('MAPS_STATIC_API_KEY') : '';
+    $api_secret = Handle_API_keys::get_API_key('MAPS_STATIC_API_SECRET') ? Handle_API_keys::get_API_key('MAPS_STATIC_API_SECRET') : '';
 
     $atts = shortcode_atts(
         array(
@@ -342,15 +347,10 @@ function ctp_map_image_shortcode($atts) {
         ),
         $atts
     );
-    
-    // TODO Add validation if API key is not valid than return;
-    // if( empty($api_key) || empty($api_secret) ) return;
-
-    // $atts['center'] = str_replace(';', '|', $atts['center']);
 
     // Get Google Static Map Image
     $map_url = "https://maps.googleapis.com/maps/api/staticmap?center={$atts['center']}&zoom=18&size=1200x600&scale=2&markers=size:mid|color:red|{$atts['center']}&key={$api_key}";
-    $signedUrl = $Utils->signUrl($map_url, $api_secret);
+    $signedUrl = Utils::signUrl($map_url, $api_secret);
 
     return "<img src='{$signedUrl}' alt='{$atts['alt']}'>";
 

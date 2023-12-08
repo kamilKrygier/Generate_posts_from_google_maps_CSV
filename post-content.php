@@ -1,7 +1,5 @@
 <?php
 
-// TODO Check if external links has nofollow
-
     // BUSINESS/COMPANY INFO
     $post_content .= '<div class="wp-block-columns are-vertically-aligned-center is-layout-flex wp-container-3 wp-block-columns-is-layout-flex">';
 
@@ -11,7 +9,7 @@
             
             // INFO LIST
                 $post_content .= (!empty($phone)) ? "<li><span>Telefon: <a href='tel:$phone'>$phone</a></span></li>" : "";
-                $post_content .= (!empty($parsedURL)) ? "<li><span>Strona internetowa: <a href='$parsedURL'>$parsedURL</a></span></li>" : "";
+                $post_content .= (!empty($parsedURL)) ? "<li><span>Strona internetowa: <a href='$parsedURL' rel='nofollow'>$parsedURL</a></span></li>" : "";
                 $post_content .= (!empty($addressItem)) ? "<li><span>Adres: $addressItem</span></li>" : "";
                 $post_content .= (!empty($pretty_opening_hours)) ? "<li><span>Godziny otwarcia: $pretty_opening_hours</span></li>" : "";
                 $post_content .= (!empty($businessCategory)) ? "<li><span>Kategoria: $businessCategory</span></li>" : "";
@@ -46,9 +44,9 @@
 
     // GOOGLE STATIC MAPS API IMAGE
 
-        $post_content .= "<a href='https://www.google.com/maps/search/$latitudeItem,$longitudeItem' target='_blank'>";
+        $post_content .= "<a href='https://www.google.com/maps/search/$latitudeItem,$longitudeItem' target='_blank' rel='nofollow'>";
 
         $post_content .= '[ctp_map_image center="' . $latitudeItem . ',' . $longitudeItem . '" alt="' . $pretty_place_name . '"]';
 
-        $post_content .= "</a><br><div class='wp-block-buttons is-layout-flex wp-block-buttons-is-layout-flex'><div class='wp-block-button'><a class='wp-block-button__link wp-element-button' href='https://www.google.com/maps/search/$latitudeItem,$longitudeItem'>Jak dojadę ?</a></div></div>";
+        $post_content .= "</a><br><div class='wp-block-buttons is-layout-flex wp-block-buttons-is-layout-flex'><div class='wp-block-button'><a class='wp-block-button__link wp-element-button' href='https://www.google.com/maps/search/$latitudeItem,$longitudeItem' rel='nofollow'>Jak dojadę ?</a></div></div>";
     // -----------------------------------------

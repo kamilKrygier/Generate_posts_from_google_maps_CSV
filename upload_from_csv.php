@@ -2,8 +2,10 @@
 
 // VARIABLES
 $batch_size = 10;
-$placeholder_id = 16;  // Replace with placeholder ID or page screenshot
-$Utils = new Utils();
+
+// FIXME Below placeholder is not attaching to post
+$placeholderURL = get_option( 'ctp_placeholder_image' ) ? get_option( 'ctp_placeholder_image' ) : '';
+$placeholderID = ( 0 !== attachment_url_to_postid($placeholderURL) ) ? attachment_url_to_postid($placeholderURL) : '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -16,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $validMimeTypes = ['text/plain', 'text/csv', 'application/csv', 'application/vnd.ms-excel', 'text/comma-separated-values', 'text/x-comma-separated-values'];
 
         if (!in_array($fileType, $validMimeTypes)) {
-            $Utils->debug_log('Please upload a valid CSV file.');
+            Utils::debug_log('Please upload a valid CSV file.');
             return;
         }
 
@@ -26,8 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $totalRows = count($csvRows);
         $batches = ceil($totalRows / $batch_size);
-        $Utils->debug_log("Total Rows: $totalRows");
-        $Utils->debug_log("Processing in $batches batches of $batch_size");
+        Utils::debug_log("Total Rows: $totalRows");
+        Utils::debug_log("Processing in $batches batches of $batch_size");
 
         $requiredColumns = [
             'Nazwa', 'Telefon', 'Adres', 'Godziny otwarcia', 'Strona internetowa',
@@ -37,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         foreach($requiredColumns as $column) {
             if(!in_array($column, $header)) {
-                $Utils->debug_log("Missing required column: $column");
+                Utils::debug_log("Missing required column: $column");
                 return;
             }
         }
@@ -45,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         for ($i = 0; $i < $batches; $i++) {
 
             $batchRows = array_splice($csvRows, 0, $batch_size);
-            $Utils->debug_log("Processing batch " . ($i + 1));   
+            Utils::debug_log("Processing batch " . ($i + 1));   
 
             foreach ($batchRows as $row) {
 
@@ -90,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Split city details
                 $secondFromLast = isset($addressParts[count($addressParts) - 2]) ? trim($addressParts[count($addressParts) - 2]) : '';
                 $cityParts = explode(' ', $secondFromLast);
-                // $Utils->debug_log("Current cityParts (post code and city name) = $secondFromLast");
+                // Utils::debug_log("Current cityParts (post code and city name) = $secondFromLast");
 
                 $addressArray['city']['post_code'] = isset($cityParts[0]) ? trim($cityParts[0]) : '';
                 $addressArray['city']['city_name'] = isset($cityParts[1]) ? trim($cityParts[1]) : '';
@@ -248,7 +250,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Validate Longitude and Latitude and build map URL
                 if(!is_numeric($longitudeItem) || !is_numeric($latitudeItem)) {
-                    $Utils->debug_log('Invalid longitude or latitude in one of the rows.');
+                    Utils::debug_log('Invalid longitude or latitude in one of the rows.');
                     continue;
                 }
 
@@ -273,7 +275,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 'slug' => sanitize_title($businessCategory)
                             )
                         );
-                        if(is_wp_error($inserted_term)) $Utils->debug_log("term_exists($businessCategory, 'category') - wp_error has occured");
+                        if(is_wp_error($inserted_term)) Utils::debug_log("term_exists($businessCategory, 'category') - wp_error has occured");
                     }
 
                     $parentCat = get_term_by('slug', sanitize_title($businessCategory), 'category');
@@ -287,13 +289,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 'slug' => sanitize_title($addressArray['city']['city_name']),
                             )
                         );
-                        if(is_wp_error($inserted_term)) $Utils->debug_log("term_exists({$addressArray['city']['city_name']}, 'category') - wp_error has occured");
+                        if(is_wp_error($inserted_term)) Utils::debug_log("term_exists({$addressArray['city']['city_name']}, 'category') - wp_error has occured");
                     }
 
                     $subcategory = get_term_by('slug', sanitize_title($addressArray['city']['city_name']), 'category');
 
-                    $Utils = new Utils();
-                    $post_content = $Utils->remove_emoji($post_content);
+                    $post_content = Utils::remove_emoji($post_content);
 
                     // FIXME there might be an issue with compatibility with instant indexing plugin
 
@@ -311,7 +312,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $post_id = wp_insert_post( $post_data );
                     if( $post_id ){
 
-                        $Utils->debug_log("Post was created with the ID= $post_id");
+                        Utils::debug_log("Post was created with the ID= $post_id");
                         
                         if(isset($page_screenshot) && $page_screenshot) set_post_thumbnail( $post_id, $page_screenshot[0] );
                         else set_post_thumbnail( $post_id, $placeholder_id );
@@ -319,16 +320,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         echo "Post was created with the ID= $post_id, with attachment with ID= $placeholder_id<br>";
 
                     } else{
-                        $Utils->debug_log("Failed to create post with ID= $post_id");
-                        if(is_wp_error($post_id)) $Utils->debug_log('Error creating post: ' . $post_id->get_error_message());
-                        else $Utils->debug_log("Failed to create post. Unknown error.");
+                        Utils::debug_log("Failed to create post with ID= $post_id");
+                        if(is_wp_error($post_id)) Utils::debug_log('Error creating post: ' . $post_id->get_error_message());
+                        else Utils::debug_log("Failed to create post. Unknown error.");
                         echo "Failed to create post with ID= $post_id<br>";
                     }
-                } else $Utils->debug_log("Post $pretty_place_name is already created"); 
+                } else Utils::debug_log("Post $pretty_place_name is already created"); 
             }
-            $Utils->debug_log("Processed batch " . ($i + 1));
+            Utils::debug_log("Processed batch " . ($i + 1));
         }
-        $Utils->debug_log('All batches has been finished!');
+        Utils::debug_log('All batches has been finished!');
         echo "All batches has been finished!<br>";
         return;
     }

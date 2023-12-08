@@ -1,11 +1,12 @@
 <?php
 
 $handleAPIKeys = new Handle_API_keys();
-$Utils = new Utils();
 $GOOGLE_PLACES_API_KEY = $handleAPIKeys->get_API_key('GOOGLE_PLACES_API_KEY');
 
 // All main Google Places Categories (10.2023)
 $place_category = ["accounting","airport","amusement_park","aquarium","art_gallery","atm","bakery","bank","bar","beauty_salon","bicycle_store","book_store","bowling_alley","bus_station","cafe","campground","car_dealer","car_rental","car_repair","car_wash","casino","cemetery","church","city_hall","clothing_store","convenience_store","courthouse","dentist","department_store","doctor","drugstore","electrician","electronics_store","embassy","fire_station","florist","funeral_home","furniture_store","gas_station","gym","hair_care","hardware_store","hindu_temple","home_goods_store","hospital","insurance_agency","jewelry_store","laundry","lawyer","library","light_rail_station","liquor_store","local_government_office","locksmith","lodging","meal_delivery","meal_takeaway","mosque","movie_rental","movie_theater","moving_company","museum","night_club","painter","park","parking","pet_store","pharmacy","physiotherapist","plumber","police","post_office","primary_school","real_estate_agency","restaurant","roofing_contractor","rv_park","school","secondary_school","shoe_store","shopping_mall","spa","stadium","storage","store","subway_station","supermarket","synagogue","taxi_stand","tourist_attraction","train_station","transit_station","travel_agency","university","veterinary_care","zoo"];
+// multiple types can be used (use | to separate them) during API call
+// @see https://stackoverflow.com/questions/6845254/google-places-api-using-multiple-name-parameters-in-the-places-search
 
 // TODO Add additional categories Jeweler, Jewelry buyer, Jewelry repair service, Jewelry store, Diamond dealer, Goldsmith, Gold dealer,
 
@@ -24,12 +25,12 @@ if (isset($_POST['submit']) && isset($_POST['place_category'])) {
 
     if (!file_exists($directory)) {
         mkdir($directory, 0755, true);
-        $Utils->debug_log("exported_csv folder has been created!");
+        Utils::debug_log("exported_csv folder has been created!");
     }
 
 
     // Declare path to save CSV in
-    $slugified_place_category = $Utils->sanitizeForCsv($_POST['place_category']);
+    $slugified_place_category = Utils::sanitizeForCsv($_POST['place_category']);
     $output_path = __DIR__ . "/exported_csv/$slugified_place_category.csv";
 
     // 100 biggest cities in Poland
@@ -38,7 +39,7 @@ if (isset($_POST['submit']) && isset($_POST['place_category'])) {
 
     $csvData = [];
     
-    $Utils->debug_log("\nGoogle Places Scrape has been started!");
+    Utils::debug_log("\nGoogle Places Scrape has been started!");
 
     function fetchUrl($url, $params) {
         $ch = curl_init();
@@ -55,13 +56,13 @@ if (isset($_POST['submit']) && isset($_POST['place_category'])) {
             "key" => $GOOGLE_PLACES_API_KEY
         ];
 
-        $Utils->debug_log("Curently checking: {$_POST['place_category']} in $city");
+        Utils::debug_log("Curently checking: {$_POST['place_category']} in $city");
 
         $places = fetchUrl($google_places_base_search_url, $searchParams);
 
         if (isset($places["results"])) {
             foreach ($places["results"] as $place) {
-                $Utils->debug_log("Checking place: {$place['place_id']}");
+                Utils::debug_log("Checking place: {$place['place_id']}");
 
                 $detailsParams = [
                     "place_id" => $place["place_id"],
@@ -73,23 +74,23 @@ if (isset($_POST['submit']) && isset($_POST['place_category'])) {
                 $details = fetchUrl($google_places_base_details_url, $detailsParams);
                 $reviews = array_slice($details["result"]["reviews"] ?? [], 0, 6);
 
-                $Utils->debug_log("Place name: {$details['result']['name']}");
+                Utils::debug_log("Place name: {$details['result']['name']}");
                 
                 if($details['result']['name'] == '' || empty($details['result']['name'] || !isset($details['result']['name']))) continue;
 
                 if($details["result"]["types"][0] == $_POST['place_category']) $rowData = [
-                    "Name" => $Utils->sanitizeForCsv($details["result"]["name"] ?? ''),
-                    "Phone" => $Utils->sanitizeForCsv($details["result"]["formatted_phone_number"] ?? ''),
-                    "Address" => $Utils->sanitizeForCsv($details["result"]["formatted_address"] ?? ''),
-                    "Hours" => $Utils->sanitizeForCsv(implode(", ", $details["result"]["opening_hours"]["weekday_text"] ?? [])),
-                    "Website" => $Utils->sanitizeForCsv($details["result"]["website"] ?? ''),
-                    "Review 1" => $Utils->sanitizeForCsv($reviews[0]["text"] ?? ''),
-                    "Review 2" => $Utils->sanitizeForCsv($reviews[1]["text"] ?? ''),
-                    "Review 3" => $Utils->sanitizeForCsv($reviews[2]["text"] ?? ''),
-                    "Review 4" => $Utils->sanitizeForCsv($reviews[3]["text"] ?? ''),
-                    "Review 5" => $Utils->sanitizeForCsv($reviews[4]["text"] ?? ''),
-                    "Review 6" => $Utils->sanitizeForCsv($reviews[5]["text"] ?? ''),
-                    "Type" => $Utils->sanitizeForCsv(implode(", ", $details["result"]["types"] ?? [])),
+                    "Name" => Utils::sanitizeForCsv($details["result"]["name"] ?? ''),
+                    "Phone" => Utils::sanitizeForCsv($details["result"]["formatted_phone_number"] ?? ''),
+                    "Address" => Utils::sanitizeForCsv($details["result"]["formatted_address"] ?? ''),
+                    "Hours" => Utils::sanitizeForCsv(implode(", ", $details["result"]["opening_hours"]["weekday_text"] ?? [])),
+                    "Website" => Utils::sanitizeForCsv($details["result"]["website"] ?? ''),
+                    "Review 1" => Utils::sanitizeForCsv($reviews[0]["text"] ?? ''),
+                    "Review 2" => Utils::sanitizeForCsv($reviews[1]["text"] ?? ''),
+                    "Review 3" => Utils::sanitizeForCsv($reviews[2]["text"] ?? ''),
+                    "Review 4" => Utils::sanitizeForCsv($reviews[3]["text"] ?? ''),
+                    "Review 5" => Utils::sanitizeForCsv($reviews[4]["text"] ?? ''),
+                    "Review 6" => Utils::sanitizeForCsv($reviews[5]["text"] ?? ''),
+                    "Type" => Utils::sanitizeForCsv(implode(", ", $details["result"]["types"] ?? [])),
                     "Price Level" => $details["result"]["price_level"] ?? '',
                     "Latitude" => $details["result"]["geometry"]["location"]["lat"] ?? '',
                     "Longitude" => $details["result"]["geometry"]["location"]["lng"] ?? '',
@@ -97,7 +98,7 @@ if (isset($_POST['submit']) && isset($_POST['place_category'])) {
                 
                 $csvData[] = $rowData;
             }
-        } else $Utils->debug_log("No place has been returned");
+        } else Utils::debug_log("No place has been returned");
     }
 
     // Check if the file exists and remove it
@@ -108,7 +109,7 @@ if (isset($_POST['submit']) && isset($_POST['place_category'])) {
     $output = fopen($output_path, "w");
 
     if ($output === false) {
-        $Utils->debug_log("Failed to open the CSV file for writing.");
+        Utils::debug_log("Failed to open the CSV file for writing.");
         die("Failed to open the CSV file for writing.");
     }
 
@@ -118,7 +119,7 @@ if (isset($_POST['submit']) && isset($_POST['place_category'])) {
         fputcsv($output, $row);
     }
 
-    $Utils->debug_log("Google Places Scrape has finished!\n");
+    Utils::debug_log("Google Places Scrape has finished!\n");
     echo "Google Places Scrape has finished!";
     fclose($output);
 
