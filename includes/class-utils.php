@@ -99,11 +99,12 @@ class Utils{
         return $escaped_message;
     }
 
-    public static function uploadPlaceholderImage($imageURL){
+    public static function set_placeholder_image($imageURL){
 
         if (!filter_var($imageURL, FILTER_VALIDATE_URL) || !preg_match('/\.(jpg|jpeg|png|webp|avif)$/i', $imageURL)) return false; // Not a valid image URL
 
         // Check if the image is from the current website
+        $imageID = 0;
         $site_url = parse_url(get_site_url());
         $image_url = parse_url($imageURL);
 
@@ -113,22 +114,36 @@ class Utils{
             require_once ABSPATH . 'wp-admin/includes/file.php';
             require_once ABSPATH . 'wp-admin/includes/image.php';
 
-            $sideloaded = media_sideload_image($imageURL, 0, null, 'src');
+            $sideloaded = media_sideload_image($imageURL, 0, null, 'id');
 
             if (is_wp_error($sideloaded)) {
                 return false; // Sideload failed
             }
 
-            $imageURL = $sideloaded;
+            $imageID = $sideloaded;
+            $imageURL = wp_get_attachment_image_url( $imageID );
         }
+
+        $image_array = (object) array(
+            'imageID' => $imageID,
+            'imageURL' => $imageURL
+        );
 
         // Update the WordPress option with the new image URL
 
-        if(!get_option( 'ctp_placeholder_image' )) add_option('ctp_placeholder_image', $imageURL, '', false);
-            else update_option( 'ctp_placeholder_image', $imageURL, false );
+        if(!get_option( 'ctp_placeholder_image' )) add_option('ctp_placeholder_image', $image_array, '', false);
+            else update_option( 'ctp_placeholder_image', $image_array, false );
             
         return true;
         
+    }
+
+    public static function get_placeholder_image(){
+
+        $image_array = get_option('ctp_placeholder_image');
+        
+        return !empty($image_array) ? $image_array : false;
+
     }
 
 }

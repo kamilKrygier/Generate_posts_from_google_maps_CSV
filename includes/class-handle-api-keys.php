@@ -8,9 +8,17 @@ class Handle_API_keys{
     
     // TODO Add validation if API key is not valid than return;
     public function change_API_key($API_name, $API_value){
-        $API_key = get_option( $API_name ) != $API_value ? $this->set_API_key( $API_name, $API_value ) : false;
+
+        if (get_option($API_name) != $API_value) {
+            
+            $API_key_changed = $this->set_API_key($API_name, $API_value);
+    
+            return $API_key_changed ? true : false;
+
+        } 
         
-        return $API_key ? $API_name . " - " . __('Saved', 'default') . "<br>" : '';
+        else return false;
+
     }
 
     private function set_API_key( $API_name, $API_value ){

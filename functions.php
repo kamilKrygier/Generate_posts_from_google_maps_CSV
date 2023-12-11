@@ -184,23 +184,6 @@ function google_places_scrapper_page(){
 
 // Settings page
 function settings_page(){
-    $ctp_placeholder_image = '';
-    $handleApiKeys = new Handle_API_keys();
-
-    // TODO move below echoes to admin_notices to make it bit more readable :)
-    if(isset($_POST['submit'])){
-        if(!empty($_POST['MAPS_STATIC_API_KEY'])) echo $handleApiKeys->change_API_key('MAPS_STATIC_API_KEY', $_POST['MAPS_STATIC_API_KEY']);
-        if(!empty($_POST['MAPS_STATIC_API_SECRET'])) echo $handleApiKeys->change_API_key('MAPS_STATIC_API_SECRET', $_POST['MAPS_STATIC_API_SECRET']);
-        if(!empty($_POST['GOOGLE_PLACES_API_KEY'])) echo $handleApiKeys->change_API_key('GOOGLE_PLACES_API_KEY', $_POST['GOOGLE_PLACES_API_KEY']);
-        if(!empty($_POST['OPENAI_API_KEY'])) echo $handleApiKeys->change_API_key('OPENAI_API_KEY', $_POST['OPENAI_API_KEY']);
-        // TODO move image upload to other class and validate data before send to DB
-        if(!empty($_POST['ctp_placeholder_image'])){
-            $uploadImage = Utils::uploadPlaceholderImage($_POST['ctp_placeholder_image']) ? 'Success: Image uploaded' : 'Error: image not uploaded';
-            echo $uploadImage;
-        }
-    }
-
-    if(!empty(get_option( 'ctp_placeholder_image' ))) $ctp_placeholder_image = get_option( 'ctp_placeholder_image' );
 
     echo "<h2>".__('Settings', 'default')."</h2>";
     echo "<form method='post' action=''>"; 
@@ -208,7 +191,7 @@ function settings_page(){
     echo "<label>Google MAPS STATIC API SECRET \n<input type='text' placeholder='Here place your api key' name='MAPS_STATIC_API_SECRET'></label><br>";
     echo "<label>Google PLACES API KEY \n<input type='text' placeholder='Here place your api key' name='GOOGLE_PLACES_API_KEY'></label><br>";
     echo "<label>OpenAI API KEY \n<input type='text' placeholder='Here place your api key' name='OPENAI_API_KEY'></label><br>";
-    echo "<label>Placeholder image URL: \n<input type='text' placeholder='Here place your placeholder image URL' name='ctp_placeholder_image' value='$ctp_placeholder_image'></label><br>";
+    echo "<label>Placeholder image URL: \n<input type='text' placeholder='Here place your placeholder image URL' name='ctp_placeholder_image'></label><br>";
     echo "<input type='submit' name='submit' value='".__('Save', 'default')."'>";
     echo "</form>";
 }

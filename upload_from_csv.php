@@ -4,8 +4,7 @@
 $batch_size = 10;
 
 // FIXME Below placeholder is not attaching to post
-$placeholderURL = get_option( 'ctp_placeholder_image' ) ? get_option( 'ctp_placeholder_image' ) : '';
-$placeholderID = ( 0 !== attachment_url_to_postid($placeholderURL) ) ? attachment_url_to_postid($placeholderURL) : '';
+$image_array = Utils::get_placeholder_image();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -315,9 +314,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         Utils::debug_log("Post was created with the ID= $post_id");
                         
                         if(isset($page_screenshot) && $page_screenshot) set_post_thumbnail( $post_id, $page_screenshot[0] );
-                        else set_post_thumbnail( $post_id, $placeholder_id );
+                        else set_post_thumbnail( $post_id, $image_array->imageID );
 
-                        echo "Post was created with the ID= $post_id, with attachment with ID= $placeholder_id<br>";
+                        echo "Post was created with the ID= $post_id, with attachment with ID= $image_array->imageID<br>";
 
                     } else{
                         Utils::debug_log("Failed to create post with ID= $post_id");
