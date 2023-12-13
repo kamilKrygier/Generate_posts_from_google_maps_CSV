@@ -104,11 +104,15 @@ class Handle_API_keys{
 
     private function validate_OpenAI_API_key($API_key){
 
-        // TODO Add opeanai api key validation
         $API_Key_Encryption = new API_Key_Encryption($API_key);
         $API_key = $API_Key_Encryption->decrypt($API_key);
 
-        return true;
+        $prompt = "Get me response if you received this message";
+
+        $response = AI_Generate_Post::generateContentWithOpenAI($prompt, 250); 
+
+
+        return is_null($response) ? false : true;
 
     }
 
