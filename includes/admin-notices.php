@@ -5,9 +5,9 @@ add_action('admin_notices', function() {
 
     // Check for missing API keys on specific pages
     if ($currentPage === 'csv-to-posts' && (!Handle_API_keys::get_API_key('MAPS_STATIC_API_KEY') || !Handle_API_keys::get_API_key('MAPS_STATIC_API_SECRET') || !Handle_API_keys::get_API_key('OPENAI_API_KEY'))) {
-        Utils::displayAdminNotice('error', true, 'Go to <a title="Go to settings" href="?page=ctp-settings">settings page</a> to <b>set up all API keys to use this plugin</b>');
+        Utils::displayAdminNotice('error', false, 'Go to <a title="Go to settings" href="?page=ctp-settings">settings page</a> to <b>set up all API keys to use this plugin</b>');
     } elseif ($currentPage === 'ctp-google-places-scrapper' && !Handle_API_keys::get_API_key('GOOGLE_PLACES_API_KEY')) {
-        Utils::displayAdminNotice('error', true, 'Go to <a title="Go to settings" href="?page=ctp-settings">settings page</a> to <b>set up all API keys to use this plugin</b>');
+        Utils::displayAdminNotice('error', false, 'Go to <a title="Go to settings" href="?page=ctp-settings">settings page</a> to <b>set up all API keys to use this plugin</b>');
     }
 
     // Handle POST requests on settings page
@@ -24,7 +24,7 @@ add_action('admin_notices', function() {
 
                 $message = $response ? 
                                         sprintf("%s - %s.", $apiKey, __('Saved', 'default')) : 
-                                        sprintf(__("%s - Save failed.", 'default') . ' (Check for duplicates)', $apiKey);
+                                        sprintf(__("%s - Save failed.", 'default'), $apiKey);
 
                 Utils::displayAdminNotice($noticeType, true, $message);
 

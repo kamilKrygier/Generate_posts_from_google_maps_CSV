@@ -2,8 +2,6 @@
 
 // VARIABLES
 $batch_size = 10;
-
-// FIXME Below placeholder is not attaching to post
 $image_array = Utils::get_placeholder_image();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -295,7 +293,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $post_content = Utils::remove_emoji($post_content);
 
-                    // FIXME there might be an issue with compatibility with instant indexing plugin
+                    // TODO check if there might be an issue with compatibility with instant indexing plugin
 
                     $post_data = array(
                         'post_title'        => $pretty_place_name,

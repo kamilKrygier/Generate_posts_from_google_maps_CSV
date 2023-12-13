@@ -1,5 +1,5 @@
 <?php
-
+// TODO Use Gutenberg blocks 
     // BUSINESS/COMPANY INFO
     $post_content .= '<div class="wp-block-columns are-vertically-aligned-center is-layout-flex wp-container-3 wp-block-columns-is-layout-flex">';
 

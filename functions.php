@@ -190,10 +190,11 @@ function settings_page(){
     echo "<label>Google MAPS STATIC API KEY \n<input type='text' placeholder='Here place your api key' name='MAPS_STATIC_API_KEY'></label><br>";
     echo "<label>Google MAPS STATIC API SECRET \n<input type='text' placeholder='Here place your api key' name='MAPS_STATIC_API_SECRET'></label><br>";
     echo "<label>Google PLACES API KEY \n<input type='text' placeholder='Here place your api key' name='GOOGLE_PLACES_API_KEY'></label><br>";
-    echo "<label>OpenAI API KEY \n<input type='text' placeholder='Here place your api key' name='OPENAI_API_KEY'></label><br>";
+    echo "<label>OpenAI API KEY \n<input type='text' placeholder='Here place your api key' name=''></label><br>";
     echo "<label>Placeholder image URL: \n<input type='text' placeholder='Here place your placeholder image URL' name='ctp_placeholder_image'></label><br>";
     echo "<input type='submit' name='submit' value='".__('Save', 'default')."'>";
     echo "</form>";
+
 }
 
 function generateContentWithOpenAI($prompt, $maxTokens) {
@@ -319,7 +320,7 @@ function handle_ai_generation_for_posts() {
 add_action('run_ai_generation_for_posts', 'handle_ai_generation_for_posts');
 
 function ctp_map_image_shortcode($atts) {
-
+    
     $api_key = Handle_API_keys::get_API_key('MAPS_STATIC_API_KEY') ? Handle_API_keys::get_API_key('MAPS_STATIC_API_KEY') : '';
     $api_secret = Handle_API_keys::get_API_key('MAPS_STATIC_API_SECRET') ? Handle_API_keys::get_API_key('MAPS_STATIC_API_SECRET') : '';
 
