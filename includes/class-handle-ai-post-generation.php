@@ -4,7 +4,9 @@ use GuzzleHttp\Client;
 
 class AI_Generate_Post{
 
-    public static function handle_ai_generation_for_posts($is_WP_cron_callback, $posts_ids):void {
+    public static function handle_ai_generation_for_posts($is_WP_cron_callback, $passed_ids):void {
+
+        $posts_ids = $passed_ids;
 
         if($is_WP_cron_callback){
 
@@ -24,12 +26,10 @@ class AI_Generate_Post{
 
             $posts_ids = get_posts($args);
 
-        } 
-        else $posts_ids = $this->$posts_ids;
+        }
         
-
         // Split posts into batches
-        $batches_ids = array_chunk($post_ids, 5);
+        $batches_ids = array_chunk($posts_ids, 5);
 
         Utils::debug_log("BATCH STARTED - UPDATE POST WITH AI GENERATED CONTENT");
 

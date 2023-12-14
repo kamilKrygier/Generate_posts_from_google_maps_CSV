@@ -71,8 +71,7 @@ class Handle_API_keys{
 
     private function set_API_key( $API_name, $API_key ){
         
-// !get_option( $API_name ) return true when option exists and its value is empty
-// TODO check the rest of get_option
+    // TODO check the rest of get_option - !get_option( $API_name ) return true when option exists and its value is empty
 
         if(!get_option( $API_name ) && get_option( $API_name ) != ''){
             Utils::debug_log("Option $API_name doesn't exist in DB");
