@@ -1,4 +1,7 @@
 <?php
+
+use GuzzleHttp\Client;
+
 class AI_Generate_Post{
 
     public static function handle_ai_generation_for_posts($is_WP_cron_callback, $posts_ids):void {
@@ -62,7 +65,7 @@ class AI_Generate_Post{
                         ";
             
                     
-                    $generated_post_content = self::generateContentWithOpenAI($prompt, 2200);
+                    $generated_post_content = self::generateContentWithOpenAI($prompt, 2200, false);
             
                     if (!empty($generated_post_content)) {
 
@@ -92,15 +95,19 @@ class AI_Generate_Post{
 
     }
 
-    public static function generateContentWithOpenAI($prompt, $maxTokens) {
+    public static function generateContentWithOpenAI($prompt, $maxTokens, $testRun) {
 
-        Utils::debug_log("~Begin content generation~");
+        if(!$testRun->testRun) Utils::debug_log("~Begin content generation~");
+            else Utils::debug_log("Begin OpenAI API Key Validation");
+
+        require_once dirname(__DIR__) . '/vendor/autoload.php';
     
         $client = new Client(['base_uri' => 'https://api.openai.com/']);
     
         Utils::debug_log("~Current prompt:\n $prompt\n");
     
-        $OpenAI_API_key = Handle_API_keys::get_API_key('OPENAI_API_KEY');
+        // TODO Add finctionality - if api key is empty, than display custom message and log this info
+        $OpenAI_API_key = $testRun->testRun ? $testRun->testRunKey : Handle_API_keys::get_API_key('OPENAI_API_KEY');
     
         try {
             $response = $client->post('v1/chat/completions', [

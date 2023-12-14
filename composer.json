@@ -1,14 +1,5 @@
 {
     "require": {
-        "openai-php/client": "^0.7.2",
-        "symfony/http-client": "^6.3",
-        "nyholm/psr7": "^1.8",
-        "guzzlehttp/guzzle": "^7.8",
-        "spatie/browsershot": "^3.58"
-    },
-    "config": {
-        "allow-plugins": {
-            "php-http/discovery": true
-        }
+        "guzzlehttp/guzzle": "^7.8"
     }
 }

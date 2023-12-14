@@ -12,15 +12,23 @@ add_action('admin_notices', function() {
 
     // Handle POST requests on settings page
     if ($currentPage === 'ctp-settings' && isset($_POST['submit'])) {
+
+        Utils::debug_log("ctp-settings form submitted");
+
         $handleApiKeys = new Handle_API_keys();
         $apiKeys = ['MAPS_STATIC_API_KEY', 'MAPS_STATIC_API_SECRET', 'GOOGLE_PLACES_API_KEY', 'OPENAI_API_KEY'];
 
         foreach ($apiKeys as $apiKey) {
+            Utils::debug_log("Proccessing $apiKey - checking if not empty");
             if (!empty($_POST[$apiKey])) {
+
+                Utils::debug_log("$apiKey not empty - proceed it's upload");
 
                 $response = $handleApiKeys->change_API_key($apiKey, $_POST[$apiKey]);
 
                 $noticeType = $response ? 'success' : 'error';
+
+                Utils::debug_log("$apiKey upload $noticeType");
 
                 $message = $response ? 
                                         sprintf("%s - %s.", $apiKey, __('Saved', 'default')) : 
@@ -33,13 +41,26 @@ add_action('admin_notices', function() {
 
         if (!empty($_POST['ctp_placeholder_image'])) {
 
+            Utils::debug_log("Placeholder image upload started");
+
             $placeholderImageId = Utils::get_placeholder_image()->imageID ?? '';
 
             if ($_POST['ctp_placeholder_image'] != $placeholderImageId) {
 
+                Utils::debug_log("Image different than already stored in DB");
+
                 $uploadSuccess = Utils::set_placeholder_image($_POST['ctp_placeholder_image']);
                 
                 $noticeType = $uploadSuccess ? 'success' : 'error';
+
+                Utils::debug_log("Image upload $noticeType");
+
+                if($noticeType == 'success'){
+
+                    $latestPlaceholderImage = Utils::get_placeholder_image();
+                    Utils::debug_log("ImageID = " . $latestPlaceholderImage->imageID . " | ImageURL = " . $latestPlaceholderImage->imageURL);
+
+                }
 
                 $message = $uploadSuccess ? 'Success: Placeholder image uploaded' : 'Error: Placeholder image not uploaded';
 

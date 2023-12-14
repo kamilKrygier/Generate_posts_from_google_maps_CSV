@@ -18,6 +18,8 @@ class Handle_API_keys{
     
     public function change_API_key($API_name, $API_key){
 
+        Utils::debug_log("Begin $API_name change!");
+
         require_once('class-api-key-encryption.php');
 
         $API_Key_Encryption = new API_Key_Encryption();
@@ -60,14 +62,26 @@ class Handle_API_keys{
             
         $API_key_changed = $this->set_API_key($API_name, $API_key);
 
+        if($API_key_changed) Utils::debug_log("Api key has been changed!"); 
+            else Utils::debug_log("Api key has not been changed - error while saving to database!");
+
         return $API_key_changed ? true : false;
 
     }
 
     private function set_API_key( $API_name, $API_key ){
         
-        if(!get_option( $API_name )) add_option($API_name, $API_key, '', false);
-            else update_option( $API_name, $API_key, false );
+// !get_option( $API_name ) return true when option exists and its value is empty
+// TODO check the rest of get_option
+
+        if(!get_option( $API_name ) && get_option( $API_name ) != ''){
+            Utils::debug_log("Option $API_name doesn't exist in DB");
+            add_option($API_name, $API_key, '', false);
+        }
+            else{
+                update_option( $API_name, $API_key, false );
+                Utils::debug_log("Option $API_name exist in DB");
+            }
 
         return get_option( $API_name ) == $API_key ? true : false;
 
@@ -82,7 +96,8 @@ class Handle_API_keys{
 
         $searchParams = [
             "query" => "atm in Warsaw",
-            "key" => $API_key
+            "key" => $API_key,
+            "maxResultCount" => 1,
         ];
 
         $response = Utils::fetchUrl($google_places_base_search_url, $searchParams);
@@ -107,9 +122,9 @@ class Handle_API_keys{
         $API_Key_Encryption = new API_Key_Encryption($API_key);
         $API_key = $API_Key_Encryption->decrypt($API_key);
 
-        $prompt = "Get me response if you received this message";
+        $prompt = "Hello!";
 
-        $response = AI_Generate_Post::generateContentWithOpenAI($prompt, 250); 
+        $response = AI_Generate_Post::generateContentWithOpenAI($prompt, 250, (object) array('testRun' => true, 'testRunKey' => $API_key)); 
 
 
         return is_null($response) ? false : true;

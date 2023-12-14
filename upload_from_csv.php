@@ -2,11 +2,12 @@
 
 // VARIABLES
 $batch_size = 10;
-$image_array = Utils::get_placeholder_image();
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // echo "<script>jQuery('.kk_spinner_wrapper').fadeIn();</script>";
+    echo "<h1>test</h1>";
+    echo "<script>jQuery('.kk_spinner_wrapper').fadeIn();</script>";
 
     if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] === UPLOAD_ERR_OK) {
 
@@ -308,6 +309,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Insert the post and get the post ID
                     $post_id = wp_insert_post( $post_data );
                     if( $post_id ){
+
+                        $image_array = Utils::get_placeholder_image();
 
                         Utils::debug_log("Post was created with the ID= $post_id");
                         

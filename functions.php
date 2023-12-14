@@ -4,7 +4,7 @@
  * Description: Import posts from a CSV file.
  * Version: 1.0
  * Author: Kamil Krygier
- * Author URI: https://www.linkedin.com/in/kamil-krygier-132940166
+ * Author URI: https://github.com/kamilKrygier/
  * Text Domain: csv-to-posts
  * Requires at least: 6.2
  * Requires PHP: 8.1
@@ -14,14 +14,16 @@
     exit; // Exit if accessed directly
 }
 
+// TODO check if db options with api keys will be deleted if script will create new ones 
+
 require 'vendor/autoload.php';
 require 'includes/class-handle-api-keys.php';
 require 'includes/class-utils.php';
 require_once 'includes/admin-notices.php';
-require_once('includes/class-handle-ai-post-generation.php');
+require_once 'includes/class-handle-ai-post-generation.php';
 
 // Don't forget to install GuzzleHttp
-use GuzzleHttp\Client;
+// use GuzzleHttp\Client;
 
 function ctp_admin_styles_enqueue() {
 	wp_enqueue_style( 'ctp_admin_style', plugin_dir_url(__FILE__) . "styles/dist/ctp_admin_style.css");
@@ -186,13 +188,15 @@ function google_places_scrapper_page(){
 // Settings page
 function settings_page(){
 
+    // TODO sideload default image /assets/placeholder_image.png after plugin is installed and activated
+
     echo "<h2>".__('Settings', 'default')."</h2>";
     echo "<form method='post' action=''>"; 
     echo "<label>Google MAPS STATIC API KEY \n<input type='text' placeholder='Here place your api key' name='MAPS_STATIC_API_KEY'></label><br>";
     echo "<label>Google MAPS STATIC API SECRET \n<input type='text' placeholder='Here place your api key' name='MAPS_STATIC_API_SECRET'></label><br>";
     echo "<label>Google PLACES API KEY \n<input type='text' placeholder='Here place your api key' name='GOOGLE_PLACES_API_KEY'></label><br>";
-    echo "<label>OpenAI API KEY \n<input type='text' placeholder='Here place your api key' name=''></label><br>";
-    echo "<label>Placeholder image URL: \n<input type='text' placeholder='Here place your placeholder image URL' name='ctp_placeholder_image'></label><br>";
+    echo "<label>OpenAI API KEY \n<input type='text' placeholder='Here place your api key' name='OPENAI_API_KEY'></label><br>";
+    echo "<label>Placeholder image URL: \n<input type='text' placeholder='Here place image URL' name='ctp_placeholder_image'></label><br>";
     echo "<input type='submit' name='submit' value='".__('Save', 'default')."'>";
     echo "</form>";
 
@@ -252,8 +256,10 @@ if (!wp_next_scheduled('run_ai_generation_for_posts')) {
 
 function ctp_map_image_shortcode($atts) {
     
-    $api_key = Handle_API_keys::get_API_key('MAPS_STATIC_API_KEY') ? Handle_API_keys::get_API_key('MAPS_STATIC_API_KEY') : '';
-    $api_secret = Handle_API_keys::get_API_key('MAPS_STATIC_API_SECRET') ? Handle_API_keys::get_API_key('MAPS_STATIC_API_SECRET') : '';
+// TODO Add finctionality - if api keys are empty, than display custom message and log this info
+
+    $api_key = Handle_API_keys::get_API_key('MAPS_STATIC_API_KEY');
+    $api_secret = Handle_API_keys::get_API_key('MAPS_STATIC_API_SECRET');
 
     $atts = shortcode_atts(
         array(

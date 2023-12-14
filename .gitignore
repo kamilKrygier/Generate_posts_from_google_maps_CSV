@@ -8,3 +8,4 @@ package.json
 package-lock.json
 /vendor
 /exported_csv
+/TEMP
