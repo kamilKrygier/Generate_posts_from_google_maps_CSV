@@ -26,10 +26,11 @@ require_once 'includes/class-handle-ai-post-generation.php';
 // use GuzzleHttp\Client;
 
 function ctp_admin_styles_enqueue() {
-	wp_enqueue_style( 'ctp_admin_style', plugin_dir_url(__FILE__) . "styles/dist/ctp_admin_style.css");
+	wp_enqueue_style( 'ctp_admin_style', plugin_dir_url(__FILE__) . "assets/styles/dist/ctp_admin_style.css");
+    wp_enqueue_script( 'ctp_js_script', plugin_dir_url(__FILE__) . "assets/js/ctp-js-script.js", array( 'jquery' ) );
 }
 function ctp_styles_enqueue() {
-	wp_enqueue_style( 'ctp_style', plugin_dir_url(__FILE__) . "styles/dist/ctp_style.css");
+	wp_enqueue_style( 'ctp_style', plugin_dir_url(__FILE__) . "assets/styles/dist/ctp_style.css"); 
 }
 
 if(is_admin()) add_action('admin_enqueue_scripts', 'ctp_admin_styles_enqueue');
@@ -155,6 +156,7 @@ function csv_to_posts_upload_page(){
     include_once('upload_from_csv.php');
     
     // SHOW UPLOAD BUTTON
+    echo '<div class="ctp_page">';
     echo '<h1>CSV to Posts</h1>';
     echo '<form method="post" enctype="multipart/form-data">';
     echo '<input type="file" name="csv_file" /><br>';
@@ -162,6 +164,7 @@ function csv_to_posts_upload_page(){
     echo '</form>';
     echo '<div class="kk_spinner_wrapper"><div class="kk_spinner"></div></div>';
     echo '<style></style>';
+    echo '</div>';
 
 }
 
@@ -171,7 +174,7 @@ function google_places_scrapper_page(){
 
     include_once('maps_scrape.php');
 
-    // If form not submitted, show the form
+    echo '<div class="ctp_page">';
     echo '<h2>Map Scrapper</h2>';
     echo '<form method="post" action="">'; 
     echo '<label for="place_category">Choose a category:</label>';
@@ -183,6 +186,7 @@ function google_places_scrapper_page(){
     echo '<input type="submit" name="submit" value="Scrape CSV from Google Places">';
     echo '</form>';
     echo '<div class="kk_spinner_wrapper"><div class="kk_spinner"></div></div>';
+    echo '</div>';
 }
 
 // Settings page
@@ -190,6 +194,7 @@ function settings_page(){
 
     // TODO sideload default image /assets/placeholder_image.png after plugin is installed and activated
 
+    echo '<div class="ctp_page">';
     echo "<h2>".__('Settings', 'default')."</h2>";
     echo "<form method='post' action=''>"; 
     echo "<label>Google MAPS STATIC API KEY \n<input type='text' placeholder='Here place your api key' name='MAPS_STATIC_API_KEY'></label><br>";
@@ -199,6 +204,7 @@ function settings_page(){
     echo "<label>Placeholder image URL: \n<input type='text' placeholder='Here place image URL' name='ctp_placeholder_image'></label><br>";
     echo "<input type='submit' name='submit' value='".__('Save', 'default')."'>";
     echo "</form>";
+    echo '</div>';
 
 }
 

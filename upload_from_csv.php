@@ -6,9 +6,6 @@ $batch_size = 10;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    echo "<h1>test</h1>";
-    echo "<script>jQuery('.kk_spinner_wrapper').fadeIn();</script>";
-
     if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] === UPLOAD_ERR_OK) {
 
         // Check if it's a CSV file
