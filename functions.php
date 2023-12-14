@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: CSV to Posts plugin
- * Description: Import posts from a CSV file.
+ * Description: Import posts from a CSV file and scrape Google places. REMEMBER TO INSTALL GUZZLEHTTP (composer require guzzlehttp/guzzle). Also important thing is to increase memory_limit=512M (can be decreased to 256M if not scraping Google Places) and max_execution_time (Hard to say how long execution time should be. It depends of maps scraping and CSVs size. When scraping or importing CSVs just set it to 600).
  * Version: 1.0
  * Author: Kamil Krygier
  * Author URI: https://github.com/kamilKrygier/
@@ -14,9 +14,9 @@
     exit; // Exit if accessed directly
 }
 
-// TODO check if db options with api keys will be deleted if script will create new ones 
+// TODO check if db options with api keys will be deleted, script will create new ones 
 
-require 'vendor/autoload.php';
+// require 'vendor/autoload.php';
 require 'includes/class-handle-api-keys.php';
 require 'includes/class-utils.php';
 require_once 'includes/admin-notices.php';
@@ -162,7 +162,6 @@ function csv_to_posts_upload_page(){
     echo '<input type="file" name="csv_file" /><br>';
     echo '<input type="submit" value="Upload" />';
     echo '</form>';
-    echo '<div class="kk_spinner_wrapper"><div class="kk_spinner"></div></div>';
     echo '<style></style>';
     echo '</div>';
 
@@ -185,7 +184,6 @@ function google_places_scrapper_page(){
     echo '</select><br>';
     echo '<input type="submit" name="submit" value="Scrape CSV from Google Places">';
     echo '</form>';
-    echo '<div class="kk_spinner_wrapper"><div class="kk_spinner"></div></div>';
     echo '</div>';
 }
 

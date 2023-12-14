@@ -3,6 +3,9 @@
 // multiple types can be used (use | to separate them) during API call
 // @see https://stackoverflow.com/questions/6845254/google-places-api-using-multiple-name-parameters-in-the-places-search
 
+
+// All main Google Places Categories (10.2023)
+$place_category = ["gold_dealer","goldsmith","diamond_dealer","jewelry_repair_service","jewelry_buyer","jeweler","accounting","airport","amusement_park","aquarium","art_gallery","atm","bakery","bank","bar","beauty_salon","bicycle_store","book_store","bowling_alley","bus_station","cafe","campground","car_dealer","car_rental","car_repair","car_wash","casino","cemetery","church","city_hall","clothing_store","convenience_store","courthouse","dentist","department_store","doctor","drugstore","electrician","electronics_store","embassy","fire_station","florist","funeral_home","furniture_store","gas_station","gym","hair_care","hardware_store","hindu_temple","home_goods_store","hospital","insurance_agency","jewelry_store","laundry","lawyer","library","light_rail_station","liquor_store","local_government_office","locksmith","lodging","meal_delivery","meal_takeaway","mosque","movie_rental","movie_theater","moving_company","museum","night_club","painter","park","parking","pet_store","pharmacy","physiotherapist","plumber","police","post_office","primary_school","real_estate_agency","restaurant","roofing_contractor","rv_park","school","secondary_school","shoe_store","shopping_mall","spa","stadium","storage","store","subway_station","supermarket","synagogue","taxi_stand","tourist_attraction","train_station","transit_station","travel_agency","university","veterinary_care","zoo"];
 // TODO Add additional categories Jeweler, Jewelry buyer, Jewelry repair service, Jewelry store, Diamond dealer, Goldsmith, Gold dealer,
 
 // Process the code after form is submitted
@@ -10,9 +13,6 @@ if (isset($_POST['submit']) && isset($_POST['place_category'])) {
 
     // TODO Add functionality - if api key is empty, than display custom message and log this info
     $GOOGLE_PLACES_API_KEY = Handle_API_keys::get_API_key('GOOGLE_PLACES_API_KEY');
-
-    // All main Google Places Categories (10.2023)
-    $place_category = ["accounting","airport","amusement_park","aquarium","art_gallery","atm","bakery","bank","bar","beauty_salon","bicycle_store","book_store","bowling_alley","bus_station","cafe","campground","car_dealer","car_rental","car_repair","car_wash","casino","cemetery","church","city_hall","clothing_store","convenience_store","courthouse","dentist","department_store","doctor","drugstore","electrician","electronics_store","embassy","fire_station","florist","funeral_home","furniture_store","gas_station","gym","hair_care","hardware_store","hindu_temple","home_goods_store","hospital","insurance_agency","jewelry_store","laundry","lawyer","library","light_rail_station","liquor_store","local_government_office","locksmith","lodging","meal_delivery","meal_takeaway","mosque","movie_rental","movie_theater","moving_company","museum","night_club","painter","park","parking","pet_store","pharmacy","physiotherapist","plumber","police","post_office","primary_school","real_estate_agency","restaurant","roofing_contractor","rv_park","school","secondary_school","shoe_store","shopping_mall","spa","stadium","storage","store","subway_station","supermarket","synagogue","taxi_stand","tourist_attraction","train_station","transit_station","travel_agency","university","veterinary_care","zoo"];
 
     echo "<script>jQuery('.kk_spinner_wrapper').fadeIn();</script>";
 
@@ -70,6 +70,7 @@ if (isset($_POST['submit']) && isset($_POST['place_category'])) {
                 
                 if($details['result']['name'] == '' || empty($details['result']['name'] || !isset($details['result']['name']))) continue;
 
+                // TODO $details["result"]["types"][0] == $_POST['place_category'] might be a problem if searching not for main categories (from google list: https://developers.google.com/maps/documentation/places/web-service/supported_types?hl=pl)
                 if($details["result"]["types"][0] == $_POST['place_category']) $rowData = [
                     "Name" => Utils::sanitizeForCsv($details["result"]["name"] ?? ''),
                     "Phone" => Utils::sanitizeForCsv($details["result"]["formatted_phone_number"] ?? ''),
