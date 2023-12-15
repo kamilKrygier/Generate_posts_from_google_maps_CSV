@@ -1,0 +1,19 @@
+.ctp_review_wrapper {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-gap: 2em;
+}
+.ctp_review_wrapper > .ctp_review_item {
+  background-color: rgba(240, 254, 255, 0.7);
+  border-radius: 20px;
+  padding: 1em;
+  backdrop-filter: blur(6px);
+}
+
+.ctp_map_image {
+  max-width: 100%;
+}
+
+.wp-block-post-featured-image .wp-block-post-featured-image__overlay.has-background-dim-50 {
+  opacity: 0.15;
+}

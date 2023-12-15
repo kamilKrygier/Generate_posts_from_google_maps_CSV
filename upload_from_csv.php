@@ -236,6 +236,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     case 1:
                         $pricesItem = "Bardzo niskie";
                         break;
+                    case 0:
+                        $pricesItem = "Darmowo";
+                        break;
                     default:
                         $pricesItem = "Nie podano";
                 }

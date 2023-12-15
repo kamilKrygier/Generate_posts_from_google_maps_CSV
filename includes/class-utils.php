@@ -147,6 +147,21 @@ class Utils{
         
     }
 
+    public static function set_placeholder_image_on_plugin_activation():void {
+
+        $image_array = get_option( 'ctp_placeholder_image' );
+
+        if(empty($image_array) || $image_array == '' || $image_array == 0){
+
+            Utils::debug_log("No placeholder image inside database!");
+            if(self::set_placeholder_image( plugin_dir_url(__DIR__) . "assets/placeholder_image.png" )) 
+                Utils::debug_log("Default placeholder image saved in database!");
+                else Utils::debug_log("Error while saving default placeholder image in database!");
+            
+        }
+
+    }
+
     public static function get_placeholder_image(){
 
         $image_array = get_option('ctp_placeholder_image');

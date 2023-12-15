@@ -77,67 +77,6 @@ function generateContentWithOpenAIBatchAction($actions) {
 }
 add_filter('bulk_actions-edit-post', 'generateContentWithOpenAIBatchAction');
 
-// TODO remove bellow commented code when batch action 'generate_content_with_openai' works properly
-// Handle the Generate content with openai
-// function generateContentWithOpenAIBatchActionCallback() {
-//     $request_action = sanitize_text_field($_REQUEST['action']);
-//     if ($request_action === 'generate_content_with_openai') {
-//         $post_ids = (isset($_REQUEST['post']) && is_array($_REQUEST['post']) && array_map('intval', $_REQUEST['post'])) ? $_REQUEST['post'] : array();
-        
-//         // Split the post IDs into batches of 5
-//         $batches = array_chunk($post_ids, 5);
-
-//         foreach ($batches as $batch){
-            
-//             Utils::debug_log("BATCH STARTED - UPDATE POST WITH AI GENERATED CONTENT");
-//             foreach ($batch as $post_id) {
-//                 if(!get_post_meta($post_id, 'ai_genrated_content', true)){
-//                     Utils::debug_log("Working on post with ID=$post_id");
-
-//                     // Get the post object by post ID
-//                     $post = get_post($post_id);
-
-//                     if($post instanceof WP_Post){
-//                         // Extract the post content from the post object
-//                         $post_content = apply_filters('the_content', $post->post_content);
-//                         $post_title = apply_filters('the_title', $post->post_title);
-
-//                         // MAKE OPENAI API CALL
-//                         $prompt = "Podane dane: $post_content
-                        
-//                         Bazując na podanych danych, przygotuj opis na stronę internetową (pisz w trzeciej osobie liczby pojedynczej języka polskiego) w HTML (bez tagów doctype,head). Opis powinien być podzielony na konkretne działy (nagłówki h2):
-//                         - Informacje ogólne (Napisz 100 słów opisu o firmie, w którym zawrzesz informacje o ewentualnym asortymencie, obsłudze, lokalizacji, itd.),
-//                         - Podsumowanie opinii (podsumuj opinie od klientów i bazując na nich wykonaj podsumowanie firmy, czyli napisz parę słów o tym, o czym ludzie mówią w tych opiniach),
-//                         - Lokalizacja (Opowiedz więcej o okolicy w pobliżu podanego adresu firmy),
-//                         - Kontakt (Zachęć do kontaktu z firmą poprzez numer telefonu (jeśli podano), stronę internetową (jeśli podano) oraz osobiste odwiedziny pod podanym adresem (podaj adres)).
-//                         ";
-
-//                         $generated_post_content = AI_Generate_Post::generateContentWithOpenAI($prompt, 2200);
-
-//                         if(!empty($generated_post_content)){
-//                             Utils::debug_log("AI content has been generated for post with ID=$post_id");
-//                             $post_content .= $generated_post_content;
-//                             $post_updated = wp_update_post(array('ID' => $post_id, 'post_content' => $post_content));
-
-//                             if(is_wp_error( $post_updated )) Utils::debug_log("There was an error while updating post");
-//                             else{
-//                                 Utils::debug_log("Post with ID=$post_id has been updated");
-
-//                                 // If AI generated content was added to post, than add info to post that it already contains AI generated content
-//                                 add_post_meta( $post_id, 'ai_genrated_content', true);
-//                             }
-                            
-//                         }
-//                     }
-//                 } else Utils::debug_log("Post with ID=$post_id, already has AI generated content!");
-//             }
-//             Utils::debug_log("BATCH ENDED");
-//             set_transient('batch_process_generate_articles_content_complete', true, 5 * MINUTE_IN_SECONDS);
-//         }
-//     }
-// }
-// add_action('admin_action_generate_content_with_openai', 'generateContentWithOpenAIBatchActionCallback');
-
 function display_batch_process_notice() {
     if (get_transient('batch_process_complete')) {
         ?>
@@ -190,8 +129,6 @@ function google_places_scrapper_page(){
 // Settings page
 function settings_page(){
 
-    // TODO sideload default image /assets/placeholder_image.png after plugin is installed and activated
-
     echo '<div class="ctp_page">';
     echo "<h2>".__('Settings', 'default')."</h2>";
     echo "<form method='post' action=''>"; 
@@ -227,14 +164,13 @@ function add_ai_generated_column_content($column_name, $post_id) {
 }
 add_action('manage_posts_custom_column', 'add_ai_generated_column_content', 10, 2);
 
-// TODO check if posts gets ai generated content
+// TODO check if posts gets ai generated content using cron
 add_action('run_ai_generation_for_posts', function(){
 
     AI_Generate_Post::handle_ai_generation_for_posts(true, array());
 
 });
 
-// TODO check if batch action works
 add_action('admin_action_generate_content_with_openai', function(){
 
     $request_action = sanitize_text_field($_REQUEST['action']);
@@ -259,11 +195,19 @@ if (!wp_next_scheduled('run_ai_generation_for_posts')) {
 }
 
 function ctp_map_image_shortcode($atts) {
-    
-// TODO Add finctionality - if api keys are empty, than display custom message and log this info
 
     $api_key = Handle_API_keys::get_API_key('MAPS_STATIC_API_KEY');
     $api_secret = Handle_API_keys::get_API_key('MAPS_STATIC_API_SECRET');
+
+    if($api_key == ''){
+        Utils::debug_log("Received empty API KEY (MAPS_STATIC_API_KEY)");
+        return false;
+    }
+
+    if($api_secret == ''){
+        Utils::debug_log("Received empty API KEY SECRET (MAPS_STATIC_API_SECRET)");
+        return false;
+    }
 
     $atts = shortcode_atts(
         array(
@@ -281,3 +225,6 @@ function ctp_map_image_shortcode($atts) {
 
 }
 add_shortcode('ctp_map_image', 'ctp_map_image_shortcode');
+
+// Set placeholder image on plugin activation if not set
+register_activation_hook( __FILE__, array( 'Utils', 'set_placeholder_image_on_plugin_activation' ) );

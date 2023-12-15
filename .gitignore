@@ -2,7 +2,7 @@
 debug.log
 logfile.log
 /.vscode
-/assets
+/assets/placeholder_image.png
 composer.*
 package.json
 package-lock.json

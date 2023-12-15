@@ -106,8 +106,12 @@ class AI_Generate_Post{
     
         Utils::debug_log("~Current prompt:\n $prompt\n");
     
-        // TODO Add finctionality - if api key is empty, than display custom message and log this info
         $OpenAI_API_key = $testRun->testRun ? $testRun->testRunKey : Handle_API_keys::get_API_key('OPENAI_API_KEY');
+        
+        if($OpenAI_API_key == ''){
+            Utils::debug_log("Received empty API KEY (OPENAI_API_KEY) - no needed API KEY was found");
+            return null;
+        }
     
         try {
             $response = $client->post('v1/chat/completions', [
