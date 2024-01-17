@@ -40,6 +40,7 @@ if (isset($_POST['submit']) && isset($_POST['place_category'])) {
     // 100 biggest cities in Poland
     // Replace with your target cities
     $cities = ["Warszawa","Kraków","Łódź","Wrocław","Poznań","Gdańsk","Szczecin","Bydgoszcz","Lublin","Białystok","Katowice","Gdynia","Częstochowa","Radom","Sosnowiec","Toruń","Kielce","Gliwice","Zabrze","Bytom","Olsztyn","Bielsko-Biała","Rzeszów","Ruda Śląska","Rybnik","Tychy","Dąbrowa Górnicza","Opole","Elbląg","Płock","Wałbrzych","Gorzów Wielkopolski","Włocławek","Tarnów","Chorzów","Zielona Góra","Koszalin","Kalisz","Legnica","Grudziądz","Świętochłowice","Jaworzno","Jastrzębie-Zdrój","Malbork","Słupsk","Mysłowice","Konin","Piotrków Trybunalski","Inowrocław","Lubin","Ostrów Wielkopolski","Gniezno","Suwałki","Głogów","Chełm","Tomaszów Mazowiecki","Przemyśl","Stargard","Zamość","Kędzierzyn-Koźle","Lębork","Leszno","Świdnica","Piekary Śląskie","Tarnowskie Góry","Siemianowice Śląskie","Ostrołęka","Starachowice","Zawiercie","Zgierz","Pruszków","Świnoujście","Radomsko","Skierniewice","Kutno","Ciechanów","Wodzisław Śląski","Będzin","Racibórz","Sieradz","Chrzanów","Kluczbork","Nowy Sącz","Jarosław","Otwock","Jawor","Nysa","Konstantynów Łódzki","Lubliniec","Piaseczno","Piła","Sochaczew","Środa Wielkopolska","Września","Krosno","Ostrowiec Świętokrzyski","Wołomin","Mielec","Tczew","Biała Podlaska"];
+    // TODO Let choose cities or categories - 10 biggest cities | 50 biggest cities | 100... And then cities 
 
     $csvData = [];
     
@@ -74,23 +75,27 @@ if (isset($_POST['submit']) && isset($_POST['place_category'])) {
                 
                 if($details['result']['name'] == '' || empty($details['result']['name'] || !isset($details['result']['name']))) continue;
 
-                if($details["result"]["types"][0] == $_POST['place_category']) $rowData = [
-                    "Name" => Utils::sanitizeForCsv($details["result"]["name"] ?? ''),
-                    "Phone" => Utils::sanitizeForCsv($details["result"]["formatted_phone_number"] ?? ''),
-                    "Address" => Utils::sanitizeForCsv($details["result"]["formatted_address"] ?? ''),
-                    "Hours" => Utils::sanitizeForCsv(implode(", ", $details["result"]["opening_hours"]["weekday_text"] ?? [])),
-                    "Website" => Utils::sanitizeForCsv($details["result"]["website"] ?? ''),
-                    "Review 1" => Utils::sanitizeForCsv($reviews[0]["text"] ?? ''),
-                    "Review 2" => Utils::sanitizeForCsv($reviews[1]["text"] ?? ''),
-                    "Review 3" => Utils::sanitizeForCsv($reviews[2]["text"] ?? ''),
-                    "Review 4" => Utils::sanitizeForCsv($reviews[3]["text"] ?? ''),
-                    "Review 5" => Utils::sanitizeForCsv($reviews[4]["text"] ?? ''),
-                    "Review 6" => Utils::sanitizeForCsv($reviews[5]["text"] ?? ''),
-                    "Type" => Utils::sanitizeForCsv(implode(", ", $details["result"]["types"] ?? [])),
-                    "Price Level" => $details["result"]["price_level"] ?? '',
-                    "Latitude" => $details["result"]["geometry"]["location"]["lat"] ?? '',
-                    "Longitude" => $details["result"]["geometry"]["location"]["lng"] ?? '',
-                ]; else continue;
+                // Remove if($details["result"]["types"][0] == $_POST['place_category']) 
+                // to show other places from serach that doesnt match place category
+                // if($details["result"]["types"][0] == $_POST['place_category']) 
+                    $rowData = [
+                        "Name" => Utils::sanitizeForCsv($details["result"]["name"] ?? ''),
+                        "Phone" => Utils::sanitizeForCsv($details["result"]["formatted_phone_number"] ?? ''),
+                        "Address" => Utils::sanitizeForCsv($details["result"]["formatted_address"] ?? ''),
+                        "Hours" => Utils::sanitizeForCsv(implode(", ", $details["result"]["opening_hours"]["weekday_text"] ?? [])),
+                        "Website" => Utils::sanitizeForCsv($details["result"]["website"] ?? ''),
+                        "Review 1" => Utils::sanitizeForCsv($reviews[0]["text"] ?? ''),
+                        "Review 2" => Utils::sanitizeForCsv($reviews[1]["text"] ?? ''),
+                        "Review 3" => Utils::sanitizeForCsv($reviews[2]["text"] ?? ''),
+                        "Review 4" => Utils::sanitizeForCsv($reviews[3]["text"] ?? ''),
+                        "Review 5" => Utils::sanitizeForCsv($reviews[4]["text"] ?? ''),
+                        "Review 6" => Utils::sanitizeForCsv($reviews[5]["text"] ?? ''),
+                        "Type" => Utils::sanitizeForCsv(implode(", ", $details["result"]["types"] ?? [])),
+                        "Price Level" => $details["result"]["price_level"] ?? '',
+                        "Latitude" => $details["result"]["geometry"]["location"]["lat"] ?? '',
+                        "Longitude" => $details["result"]["geometry"]["location"]["lng"] ?? '',
+                    ]; 
+                    // else continue;
                 
                 $csvData[] = $rowData;
             }

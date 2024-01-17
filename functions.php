@@ -164,7 +164,7 @@ function add_ai_generated_column_content($column_name, $post_id) {
 }
 add_action('manage_posts_custom_column', 'add_ai_generated_column_content', 10, 2);
 
-// TODO check if posts gets ai generated content using cron
+// TODO check if posts gets ai generated content using WP_cron
 add_action('run_ai_generation_for_posts', function(){
 
     AI_Generate_Post::handle_ai_generation_for_posts(true, array());

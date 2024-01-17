@@ -120,7 +120,7 @@ class AI_Generate_Post{
                     'Content-Type' => 'application/json',
                 ],
                 'json' => [
-                    'model' => 'gpt-3.5-turbo',
+                    'model' => 'gpt-3.5-turbo-1106',
                     'messages' => [
                         [
                             'role' => 'system',
