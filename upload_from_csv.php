@@ -310,6 +310,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $post_id = wp_insert_post( $post_data );
                     if( $post_id ){
 
+                        add_post_meta($post_id, 'ai_genrated_content', 'not_generated');
+
                         $image_array = Utils::get_placeholder_image();
 
                         Utils::debug_log("Post was created with the ID= $post_id");

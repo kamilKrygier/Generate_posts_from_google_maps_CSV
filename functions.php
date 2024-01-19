@@ -153,7 +153,7 @@ add_filter('manage_posts_columns', 'add_ai_generated_column_header');
 // Display data in the new /wp-admin/edit.php?mode=list column
 function add_ai_generated_column_content($column_name, $post_id) {
     if ('ai_generated' === $column_name) {
-        $is_ai_generated = get_post_meta($post_id, 'ai_genrated_content', true);
+        $is_ai_generated = (get_post_meta($post_id, 'ai_genrated_content', true) == "ai_generated") ? true : false;
 
         if ($is_ai_generated) {
             echo 'AI generated';

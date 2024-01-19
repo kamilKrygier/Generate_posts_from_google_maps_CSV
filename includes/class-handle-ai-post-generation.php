@@ -46,7 +46,7 @@ class AI_Generate_Post{
 
                 $post_id = $post->ID;
 
-                if(!get_post_meta($post_id, 'ai_genrated_content', true)){
+                if(get_post_meta($post_id, 'ai_genrated_content', true) == 'not_generated'){
                     
                     $post_content = $post->post_content;
 
@@ -77,7 +77,7 @@ class AI_Generate_Post{
                         if (!is_wp_error($post_updated)) {
 
                             Utils::debug_log("Post with ID=$post_id has been updated");
-                            add_post_meta($post_id, 'ai_genrated_content', true);
+                            update_post_meta($post_id, 'ai_genrated_content', "ai_generated");
 
                         } else Utils::debug_log("There was an error while updating post");
 
