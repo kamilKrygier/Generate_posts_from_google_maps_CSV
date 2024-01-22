@@ -31,7 +31,8 @@ class Handle_API_keys{
             return false;
         }
 
-        $google_apis = array('MAPS_STATIC_API_KEY', 'GOOGLE_PLACES_API_KEY');
+        // $google_apis = array('MAPS_STATIC_API_KEY', 'GOOGLE_PLACES_API_KEY');
+        $google_apis = array('GOOGLE_PLACES_API_KEY');
 
         if(in_array($API_name, $google_apis)) {
 
