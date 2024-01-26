@@ -18,8 +18,9 @@ class AI_Generate_Post{
                 'posts_per_page'    => 10,
                 'meta_query'        => array(
                     array(
-                        'key'       => 'ai_genrated_content',
-                        'compare'   => 'NOT EXISTS'
+                        'key'     => 'ai_genrated_content',
+                        'value'   => 'not_generated',
+                        'compare' => '='
                     ),
                 )
             );
